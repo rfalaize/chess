@@ -52,6 +52,12 @@ export class Board {
     }
   }
 
+  getSquareByAddress(address) {
+    return this.rows[this.rownames.indexOf(address.charAt(1))][
+      this.colnames.indexOf(address.charAt(0))
+    ];
+  }
+
   print() {
     var i, j;
     var sep = " | ";
@@ -78,21 +84,29 @@ export class Board {
 class Square {
   constructor(board, i, j) {
     this.board = board;
-    this.i = i;
-    this.j = j;
+    this.row = i;
+    this.column = j;
     this.address = board.colnames[j] + board.rownames[j];
     this.piece = null;
   }
   setPiece(piece) {
     this.piece = piece;
-    piece.position = this;
+    piece.square = this;
+  }
+  getAdjacentSquare(rowOffset, colOffset) {
+    var square = null;
+    var adjRow = this.row + rowOffset;
+    var adjCol = this.column + colOffset;
+    if (adjRow >= 0 && adjRow <= 7 && adjCol >= 0 && adjCol <= 7) {
+      return this.board.rows[adjRow][adjCol];
+    }
   }
 }
 
 class Piece {
   constructor(color) {
     this.color = color;
-    this.position = null;
+    this.square = null;
     this.name = "";
   }
 
@@ -148,5 +162,43 @@ class Pawn extends Piece {
     super(color);
     this.hasMoved = false;
     this.name = "P";
+  }
+
+  getMoves() {
+    var moves = [];
+
+    var adjSquare;
+    var rowOffset = 1; //white pawns move by rows ascending
+    if (this.color == "B") rowOffset = -1; //black pawns move by rows descending
+
+    adjSquare = this.square.getAdjacentSquare(rowOffset, 0);
+    var canMoveForward = false;
+    // check if move is on board, and if no piece is blocking
+    if (adjSquare != null && adjSquare.piece == null) {
+      moves.push(adjSquare);
+      canMoveForward = true;
+    }
+
+    // capture
+    for (var colOffset in [-1, 1]) {
+      adjSquare = this.square.getAdjacentSquare(rowOffset, colOffset);
+      if (
+        adjSquare != null &&
+        adjSquare.piece != null &&
+        adjSquare.piece.color != this.color
+      ) {
+        moves.push(adjSquare);
+      }
+    }
+
+    // TO DO: en passant
+
+    // move by 2 squares is allowed on first move
+    if (canMoveForward && this.hasMoved == false) {
+      adjSquare = this.square.getAdjacentSquare(rowOffset * 2, 0);
+      if (adjSquare != null && adjSquare.piece == null) moves.push(adjSquare);
+    }
+
+    return moves;
   }
 }
