@@ -15,7 +15,7 @@ export default class Game extends Component {
     var row = 0;
     var rowpawn = 1;
     for (var color of this.colors) {
-      if (color == "B") {
+      if (color === "B") {
         row = 7;
         rowpawn = 6;
       }
@@ -86,7 +86,7 @@ class Square {
     this.board = board;
     this.row = i;
     this.column = j;
-    this.address = board.colnames[j] + board.rownames[j];
+    this.address = board.colnames[j] + board.rownames[i];
     this.piece = null;
   }
   setPiece(piece) {
@@ -94,7 +94,6 @@ class Square {
     piece.square = this;
   }
   getAdjacentSquare(rowOffset, colOffset) {
-    var square = null;
     var adjRow = this.row + rowOffset;
     var adjCol = this.column + colOffset;
     if (adjRow >= 0 && adjRow <= 7 && adjCol >= 0 && adjCol <= 7) {
@@ -125,6 +124,43 @@ class King extends Piece {
     super(color);
     this.hasMoved = false;
     this.name = "K";
+  }
+  getMoves() {
+    var moves = [];
+    for (var rowOffset = -1; rowOffset <= 1; rowOffset++) {
+      for (var colOffset = -1; colOffset <= 1; colOffset++) {
+        if (Math.abs(rowOffset) + Math.abs(colOffset) === 1) {
+          var adjSquare = this.square.getAdjacentSquare(rowOffset, colOffset);
+          if (adjSquare == null) continue;
+          if (adjSquare.piece == null || adjSquare.piece.color !== this.color) {
+            var isCheck = false;
+            // TO DO: verify that king would not be in check
+            if (!isCheck) moves.push(adjSquare);
+          }
+        }
+      }
+    }
+    if (!this.hasMoved) {
+      var rook;
+      // king side
+      if (
+        this.square.getAdjacentSquare(0, 1).piece == null &&
+        this.square.getAdjacentSquare(0, 2).piece == null
+      ) {
+        rook = this.square.getAdjacentSquare(0, 3).piece;
+        if (!rook.hasMoved) moves.push(this.square.getAdjacentSquare(0, 2));
+      }
+      // queen side
+      if (
+        this.square.getAdjacentSquare(0, -1).piece == null &&
+        this.square.getAdjacentSquare(0, -2).piece == null &&
+        this.square.getAdjacentSquare(0, -3).piece == null
+      ) {
+        rook = this.square.getAdjacentSquare(0, -4).piece;
+        if (!rook.hasMoved) moves.push(this.square.getAdjacentSquare(0, -2));
+      }
+    }
+    return moves;
   }
 }
 
@@ -169,7 +205,7 @@ class Pawn extends Piece {
 
     var adjSquare;
     var rowOffset = 1; //white pawns move by rows ascending
-    if (this.color == "B") rowOffset = -1; //black pawns move by rows descending
+    if (this.color === "B") rowOffset = -1; //black pawns move by rows descending
 
     adjSquare = this.square.getAdjacentSquare(rowOffset, 0);
     var canMoveForward = false;
@@ -185,7 +221,7 @@ class Pawn extends Piece {
       if (
         adjSquare != null &&
         adjSquare.piece != null &&
-        adjSquare.piece.color != this.color
+        adjSquare.piece.color !== this.color
       ) {
         moves.push(adjSquare);
       }
@@ -194,7 +230,7 @@ class Pawn extends Piece {
     // TO DO: en passant
 
     // move by 2 squares is allowed on first move
-    if (canMoveForward && this.hasMoved == false) {
+    if (canMoveForward && this.hasMoved === false) {
       adjSquare = this.square.getAdjacentSquare(rowOffset * 2, 0);
       if (adjSquare != null && adjSquare.piece == null) moves.push(adjSquare);
     }
