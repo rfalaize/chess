@@ -4,8 +4,11 @@
   "private": true,
   "dependencies": {
     "chess": "^0.3.3",
+    "jquery": "^3.3.1",
     "react": "^16.5.2",
     "react-dom": "^16.5.2",
+    "react-native": "^0.57.2",
+    "react-native-cli": "^2.0.1",
     "react-scripts": "2.0.4",
     "reactjs-chessboard": "0.0.9"
   },

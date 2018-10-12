@@ -1,11 +1,9 @@
 /* 
     Chess game classes
 */
-import React, { Component } from "react";
 
-export default class Game extends Component {
+export class Game {
   constructor() {
-    super();
     this.board = new Board();
     this.colors = ["W", "B"];
     this.initialize();
@@ -31,10 +29,6 @@ export default class Game extends Component {
         this.board.rows[rowpawn][j].setPiece(new Pawn(color));
       }
     }
-  }
-
-  render() {
-    return <div>Sss</div>;
   }
 }
 
@@ -81,7 +75,7 @@ export class Board {
   }
 }
 
-class Square {
+export class Square {
   constructor(board, i, j) {
     this.board = board;
     this.row = i;
@@ -102,7 +96,7 @@ class Square {
   }
 }
 
-class Piece {
+export class Piece {
   constructor(color) {
     this.color = color;
     this.square = null;
@@ -119,7 +113,7 @@ class Piece {
   }
 }
 
-class King extends Piece {
+export class King extends Piece {
   constructor(color) {
     super(color);
     this.hasMoved = false;
@@ -164,14 +158,14 @@ class King extends Piece {
   }
 }
 
-class Queen extends Piece {
+export class Queen extends Piece {
   constructor(color) {
     super(color);
     this.name = "Q";
   }
 }
 
-class Rook extends Piece {
+export class Rook extends Piece {
   constructor(color) {
     super(color);
     this.hasMoved = false;
@@ -179,21 +173,21 @@ class Rook extends Piece {
   }
 }
 
-class Bishop extends Piece {
+export class Bishop extends Piece {
   constructor(color) {
     super(color);
     this.name = "B";
   }
 }
 
-class Knight extends Piece {
+export class Knight extends Piece {
   constructor(color) {
     super(color);
     this.name = "N";
   }
 }
 
-class Pawn extends Piece {
+export class Pawn extends Piece {
   constructor(color) {
     super(color);
     this.hasMoved = false;
