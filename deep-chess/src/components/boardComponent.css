@@ -11,7 +11,7 @@ table {
 #chessboard {
   padding: 0px;
   margin: 0 auto;
-  border: 1px solid #662500;
+  border: 0px solid #000000;
 }
 
 #chessboard tr td {
@@ -23,7 +23,7 @@ table {
   background: #f8f4e0;
 }
 #chessboard tr:nth-child(2n) td:nth-child(2n + 1) {
-  background: #17b44c;
+  background: #aab417;
 }
 #chessboard tr:nth-child(2n + 1) td:nth-child(2n + 1) {
   background: #f8f4e0;
