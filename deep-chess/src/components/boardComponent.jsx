@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { StyleSheet, ImageBackground, View, Text } from "react-native";
+// import { StyleSheet, ImageBackground, View, Text } from "react-native";
 import { Game } from "./../game";
 import "./boardComponent.css";
 
@@ -12,6 +12,8 @@ class BoardComponent extends Component {
 
   render() {
     return (
+      <div>Ss</div>
+      /*
       <ImageBackground
         src={require("./../assets/img/board.png")}
         width="512"
@@ -21,6 +23,7 @@ class BoardComponent extends Component {
           <Text>×</Text>
         </View>
       </ImageBackground>
+      */
     );
   }
 }
