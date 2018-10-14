@@ -1,17 +1,31 @@
-import React from "react";
+import React, { Component } from "react";
 import ReactDOM from "react-dom";
+import { Route, BrowserRouter, Switch } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.css";
-//import BoardComponent from "./components/boardComponent";
-import LoginComponent from "./components/loginComponent";
+import LoginComponent from "./components/login";
+import ChessComponent from "./components/chess";
+import ErrorComponent from "./components/error";
+import NavigationComponent from "./components/navigation";
 
-console.log("Start...");
+class App extends Component {
+  state = {};
 
-/*
-var game = new Game();
-game.board.print();
-console.log(game.board.getSquareByAddress("e1").piece.getMoves());
-*/
+  //<Route path="/" component={NavigationComponent} />
 
-ReactDOM.render(<LoginComponent />, document.getElementById("root"));
+  render() {
+    return (
+      <BrowserRouter>
+        <div>
+          <Switch>
+            <Route path="/" component={LoginComponent} exact />
+            <Route path="/login" component={LoginComponent} />
+            <Route path="/chess" component={ChessComponent} />
+            <Route component={ErrorComponent} />
+          </Switch>
+        </div>
+      </BrowserRouter>
+    );
+  }
+}
 
-console.log("End");
+ReactDOM.render(<App />, document.getElementById("root"));
