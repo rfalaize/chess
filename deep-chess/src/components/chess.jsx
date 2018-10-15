@@ -20,10 +20,32 @@ class ChessComponent extends Component {
     this.state = {};
     this.game = new Game();
     this.state.activeSquare = null;
+    this.state.validMoves = null;
+    this.turn = "W";
   }
 
   handleClick = square => {
-    this.setState({ activeSquare: square });
+    if (this.state.activeSquare == null) {
+      //no active square yet
+      if (square.piece != null) {
+        this.setState({
+          activeSquare: square,
+          validMoves: square.piece.getMoves()
+        });
+      }
+    } else {
+      // active square
+      if (
+        square === this.state.activeSquare ||
+        this.state.validMoves == null ||
+        !this.state.validMoves.includes(square)
+      ) {
+        this.setState({ activeSquare: null, validMoves: null });
+        return;
+      } else {
+        console.log("Move to " + square.address);
+      }
+    }
   };
 
   getPieceImage = square => {
@@ -45,6 +67,13 @@ class ChessComponent extends Component {
     }
   };
 
+  getSquareClass = square => {
+    if (square === this.state.activeSquare) return "active-square";
+    if (this.state.validMoves == null) return null;
+    if (this.state.validMoves.includes(square)) return "valid-move";
+    return null;
+  };
+
   renderBoard() {
     return this.game.board.rows.map((row, i) => {
       return (
@@ -54,9 +83,7 @@ class ChessComponent extends Component {
               <td
                 key={square.address}
                 onClick={() => this.handleClick(square)}
-                className={
-                  this.state.activeSquare === square ? "active-square" : null
-                }
+                className={this.getSquareClass(square)}
               >
                 <img className="piece" src={this.getPieceImage(square)} />
               </td>

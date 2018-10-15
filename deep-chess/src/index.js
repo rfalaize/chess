@@ -5,6 +5,7 @@ import "bootstrap/dist/css/bootstrap.css";
 import LoginComponent from "./components/login";
 import ChessComponent from "./components/chess";
 import ErrorComponent from "./components/error";
+import ChessRoomComponent from "./components/chessRoom";
 
 class App extends Component {
   state = {};
@@ -14,7 +15,7 @@ class App extends Component {
       <BrowserRouter>
         <div>
           <Switch>
-            <Route path="/" component={ChessComponent} exact />
+            <Route path="/" component={ChessRoomComponent} exact />
             <Route path="/login" component={LoginComponent} />
             <Route path="/chess" component={ChessComponent} />
             <Route component={ErrorComponent} />

@@ -32,6 +32,9 @@
 .active-square {
   background-color: yellow !important;
 }
+.valid-move {
+  background-color: yellowgreen !important;
+}
 
 #chessboard tr:nth-child(2n) td:nth-child(2n + 1) {
   background: rgb(240, 217, 181);
