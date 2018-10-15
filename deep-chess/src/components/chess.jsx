@@ -7,10 +7,41 @@ class ChessComponent extends Component {
     super();
     this.state = {};
     this.game = new Game();
+    this.state.activeSquare = null;
+  }
+
+  handleClick = square => {
+    this.setState({ activeSquare: square });
+  };
+
+  renderBoard() {
+    return this.game.board.rows.map((row, i) => {
+      return (
+        <tr key={i}>
+          {row.map(square => {
+            return (
+              <td
+                key={square.address}
+                onClick={() => this.handleClick(square)}
+                className={
+                  this.state.activeSquare === square ? "active-square" : null
+                }
+              />
+            );
+          })}
+        </tr>
+      );
+    });
   }
 
   render() {
-    return <div>Chess Game</div>;
+    return (
+      <div>
+        <table id="chessboard">
+          <tbody>{this.renderBoard()}</tbody>
+        </table>
+      </div>
+    );
   }
 }
 

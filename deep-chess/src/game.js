@@ -71,7 +71,6 @@ export class Board {
       }
       s += "\n";
     }
-    console.log(s);
   }
 }
 

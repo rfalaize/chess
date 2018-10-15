@@ -4,7 +4,6 @@ import "./login.css";
 class LoginComponent extends Component {
   constructor(props) {
     super(props);
-
     this.state = {
       inputLogin: "",
       inputPassword: ""
@@ -13,6 +12,7 @@ class LoginComponent extends Component {
 
   handleClick = () => {
     console.log("clicked:", this.state);
+    this.props.history.push("/chess");
   };
 
   validateForm() {
