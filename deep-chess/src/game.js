@@ -184,6 +184,31 @@ export class Knight extends Piece {
     super(color);
     this.name = "N";
   }
+
+  getMoves() {
+    var moves = [];
+    var offsets = [
+      [2, 1],
+      [1, 2],
+      [-1, 2],
+      [-2, 1],
+      [-2, -1],
+      [-1, -2],
+      [1, -2],
+      [2, -1]
+    ];
+    for (var i = 0; i < offsets.length; i++) {
+      var adjSquare = this.square.getAdjacentSquare(
+        offsets[i][0],
+        offsets[i][1]
+      );
+      if (adjSquare == null) continue;
+      if (adjSquare.piece != null && adjSquare.piece.color === this.color)
+        continue;
+      moves.push(adjSquare);
+    }
+    return moves;
+  }
 }
 
 export class Pawn extends Piece {
