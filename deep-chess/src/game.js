@@ -177,6 +177,26 @@ export class Bishop extends Piece {
     super(color);
     this.name = "B";
   }
+
+  getMoves() {
+    var moves = [];
+    for (var i in [-1, 1]) {
+      for (var j in [-1, 1]) {
+        for (var offset = 1; offset < 8; offset++) {
+          var adjSquare = this.square.getAdjacentSquare(i * offset, j * offset);
+          if (adjSquare == null) break;
+          if (adjSquare.piece != null) {
+            if (adjSquare.piece.color != this.color) {
+              moves.push(adjSquare);
+            }
+            break;
+          }
+          moves.push(adjSquare);
+        }
+      }
+    }
+    return moves;
+  }
 }
 
 export class Knight extends Piece {
