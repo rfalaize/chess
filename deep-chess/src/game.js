@@ -58,9 +58,9 @@ export class Board {
     var s = " " + sep;
     // columns
     for (j = 0; j < 8; j++) {
-      s += this.colnames[j] + " " + sep;
+      s = s + this.colnames[j] + " " + sep;
     }
-    s += "\n";
+    s = s + "\n";
     // board
     for (i = 7; i >= 0; i--) {
       s += this.rownames[i] + sep;
@@ -170,6 +170,32 @@ export class Rook extends Piece {
     this.hasMoved = false;
     this.name = "R";
   }
+
+  getMoves() {
+    var moves = [];
+    for (var direction in [-1, 1]) {
+      for (var rowcol in [0, 1]) {
+        for (var offset = 1; offset < 8; offset++) {
+          var adjSquare = null;
+          if (rowcol === 0) {
+            adjSquare = this.square.getAdjacentSquare(direction * offset, 0);
+          } else {
+            adjSquare = this.square.getAdjacentSquare(0, direction * offset);
+          }
+          if (adjSquare == null) break;
+          if (adjSquare.piece != null) {
+            if (adjSquare.piece.color !== this.color) {
+              moves.push(adjSquare);
+            }
+            break;
+          }
+          moves.push(adjSquare);
+        }
+      }
+    }
+    console.log(moves);
+    return moves;
+  }
 }
 
 export class Bishop extends Piece {
@@ -186,7 +212,7 @@ export class Bishop extends Piece {
           var adjSquare = this.square.getAdjacentSquare(i * offset, j * offset);
           if (adjSquare == null) break;
           if (adjSquare.piece != null) {
-            if (adjSquare.piece.color != this.color) {
+            if (adjSquare.piece.color !== this.color) {
               moves.push(adjSquare);
             }
             break;
