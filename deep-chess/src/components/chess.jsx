@@ -85,7 +85,11 @@ class ChessComponent extends Component {
                 onClick={() => this.handleClick(square)}
                 className={this.getSquareClass(square)}
               >
-                <img className="piece" src={this.getPieceImage(square)} />
+                <img
+                  className="piece"
+                  src={this.getPieceImage(square)}
+                  alt=""
+                />
               </td>
             );
           })}
