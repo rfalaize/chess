@@ -31,11 +31,12 @@
 }
 
 .active-square {
-  background-color: yellow !important;
+  background-color: rgb(255, 255, 102) !important;
 }
-.valid-move {
+
+/*.valid-move {
   background-color: yellowgreen !important;
-}
+}*/
 
 #chessboard tr:nth-child(2n) td:nth-child(2n + 1) {
   background: rgb(240, 217, 181);
@@ -58,8 +59,8 @@
 
 .img.piece[src] {
   /* display: block; */
-  width: 100%;
-  height: 100%;
+  width: 10%;
+  height: 20%;
 }
 
 #chessboard thead {

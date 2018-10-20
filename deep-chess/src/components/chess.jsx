@@ -27,39 +27,29 @@ class ChessComponent extends Component {
   handleClick = square => {
     // no active square
     if (this.state.activeSquare == null) {
-      if (square.piece != null) {
-        // select square
-        this.setState({
-          activeSquare: square,
-          validMoves: square.piece.getMoves()
-        });
-      }
-      return;
-    }
-
-    // active square
-    if (
-      square === this.state.activeSquare ||
-      this.state.validMoves == null ||
-      !this.state.validMoves.includes(square)
-    ) {
-      // unselect square
-      this.setState({ activeSquare: null, validMoves: null });
+      this.setActiveSquare(square);
       return;
     }
 
     // move
-    const piece = this.state.activeSquare.piece;
-    piece.move(square);
-    this.setState({
-      game: this.state.game,
-      activeSquare: null,
-      validMoves: null
-    });
-
-    // unselect square
-    this.setState({ activeSquare: null, validMoves: null });
+    this.setMove(square);
   };
+
+  handleDragStart(event, square) {
+    if (square.piece == null) return;
+    this.setActiveSquare(square);
+  }
+
+  handleAllowDrop(event) {
+    event.preventDefault();
+  }
+
+  handleDrop(event, square) {
+    event.preventDefault();
+    //console.log("drop");
+    //console.log("to:", square);
+    this.setMove(square);
+  }
 
   getPieceImage = square => {
     if (square.piece == null) return undefined;
@@ -87,6 +77,40 @@ class ChessComponent extends Component {
     return null;
   };
 
+  setActiveSquare = square => {
+    if (square == null) return;
+    if (square.piece == null) return;
+    // select square
+    this.setState({
+      activeSquare: square,
+      validMoves: square.piece.getMoves()
+    });
+  };
+
+  setMove = square => {
+    // invalid move: unselect square
+    if (
+      square === this.state.activeSquare ||
+      this.state.validMoves == null ||
+      !this.state.validMoves.includes(square)
+    ) {
+      this.setState({ activeSquare: null, validMoves: null });
+      return;
+    }
+
+    // valid move
+    const piece = this.state.activeSquare.piece;
+    piece.move(square);
+    this.setState({
+      game: this.state.game,
+      activeSquare: null,
+      validMoves: null
+    });
+
+    // unselect square
+    this.setState({ activeSquare: null, validMoves: null });
+  };
+
   renderBoard() {
     const rowsToDisplay = this.state.game.board.rows.slice(0).reverse();
     //scope="row"
@@ -96,16 +120,21 @@ class ChessComponent extends Component {
           <th className="rowheader">{row[0].row + 1}</th>
           {row.map(square => {
             return (
-              <td
-                key={square.address}
-                onClick={() => this.handleClick(square)}
-                className={this.getSquareClass(square)}
-              >
-                <img
-                  className="piece"
-                  src={this.getPieceImage(square)}
-                  alt=""
-                />
+              <td key={square.address} className={this.getSquareClass(square)}>
+                <div
+                  onClick={() => this.handleClick(square)}
+                  onDragStart={e => this.handleDragStart(e, square)}
+                  onDragOver={e => this.handleAllowDrop(e)}
+                  onDrop={e => this.handleDrop(e, square)}
+                  draggable
+                  className="draggable"
+                >
+                  <img
+                    className="piece"
+                    src={this.getPieceImage(square)}
+                    alt=""
+                  />
+                </div>
               </td>
             );
           })}
