@@ -1,5 +1,5 @@
 /* 
-    Chess game classes
+    Chess engine
 */
 
 export class Game {
@@ -100,10 +100,19 @@ export class Piece {
     this.color = color;
     this.square = null;
     this.name = "";
+    this.hasMoved = false;
   }
 
   //function to move from one square to another
-  move(to) {}
+  move(targetSquare) {
+    if (targetSquare == null) return;
+    const previousSquare = this.square;
+    targetSquare.setPiece(this);
+    previousSquare.piece = null;
+    this.hasMoved = true;
+    console.log("Piece moved");
+    return true;
+  }
 
   getMoves() {}
 
@@ -115,14 +124,14 @@ export class Piece {
 export class King extends Piece {
   constructor(color) {
     super(color);
-    this.hasMoved = false;
     this.name = "K";
   }
+
   getMoves() {
     var moves = [];
     for (var rowOffset = -1; rowOffset <= 1; rowOffset++) {
       for (var colOffset = -1; colOffset <= 1; colOffset++) {
-        if (Math.abs(rowOffset) + Math.abs(colOffset) === 1) {
+        if (Math.abs(rowOffset) === 1 || Math.abs(colOffset) === 1) {
           var adjSquare = this.square.getAdjacentSquare(rowOffset, colOffset);
           if (adjSquare == null) continue;
           if (adjSquare.piece == null || adjSquare.piece.color !== this.color) {
@@ -155,6 +164,25 @@ export class King extends Piece {
     }
     return moves;
   }
+
+  move(targetSquare) {
+    const previousSquare = this.square;
+    const hasMoved = super.move(targetSquare);
+    if (hasMoved && previousSquare != null && targetSquare != null) {
+      if (Math.abs(previousSquare.column - targetSquare.column) === 2) {
+        // castle
+        if (targetSquare.column === 6) {
+          // king side
+          let rook = this.square.board.rows[targetSquare.row][7].piece;
+          rook.move(this.square.board.rows[targetSquare.row][5]);
+        } else if (targetSquare.column === 2) {
+          // queen side
+          let rook = this.square.board.rows[targetSquare.row][0].piece;
+          rook.move(this.square.board.rows[targetSquare.row][3]);
+        }
+      }
+    }
+  }
 }
 
 export class Queen extends Piece {
@@ -162,20 +190,43 @@ export class Queen extends Piece {
     super(color);
     this.name = "Q";
   }
+
+  getMoves() {
+    var moves = [];
+    for (let rowDirection of [-1, 0, 1]) {
+      for (let colDirection of [-1, 0, 1]) {
+        for (let offset = 1; offset < 8; offset++) {
+          var adjSquare = this.square.getAdjacentSquare(
+            rowDirection * offset,
+            colDirection * offset
+          );
+          if (adjSquare == null) break;
+          if (adjSquare.piece != null) {
+            if (adjSquare.piece.color !== this.color) {
+              moves.push(adjSquare);
+            }
+            break;
+          }
+          moves.push(adjSquare);
+        }
+      }
+    }
+
+    return moves;
+  }
 }
 
 export class Rook extends Piece {
   constructor(color) {
     super(color);
-    this.hasMoved = false;
     this.name = "R";
   }
 
   getMoves() {
     var moves = [];
-    for (var direction in [-1, 1]) {
-      for (var rowcol in [0, 1]) {
-        for (var offset = 1; offset < 8; offset++) {
+    for (let direction of [-1, 1]) {
+      for (let rowcol of [0, 1]) {
+        for (let offset = 1; offset < 8; offset++) {
           var adjSquare = null;
           if (rowcol === 0) {
             adjSquare = this.square.getAdjacentSquare(direction * offset, 0);
@@ -206,10 +257,13 @@ export class Bishop extends Piece {
 
   getMoves() {
     var moves = [];
-    for (var i in [-1, 1]) {
-      for (var j in [-1, 1]) {
-        for (var offset = 1; offset < 8; offset++) {
-          var adjSquare = this.square.getAdjacentSquare(i * offset, j * offset);
+    for (let rowDirection of [-1, 1]) {
+      for (let colDirection of [-1, 1]) {
+        for (let offset = 1; offset < 8; offset++) {
+          var adjSquare = this.square.getAdjacentSquare(
+            rowDirection * offset,
+            colDirection * offset
+          );
           if (adjSquare == null) break;
           if (adjSquare.piece != null) {
             if (adjSquare.piece.color !== this.color) {
@@ -221,6 +275,7 @@ export class Bishop extends Piece {
         }
       }
     }
+
     return moves;
   }
 }
@@ -260,7 +315,6 @@ export class Knight extends Piece {
 export class Pawn extends Piece {
   constructor(color) {
     super(color);
-    this.hasMoved = false;
     this.name = "P";
   }
 
@@ -280,7 +334,7 @@ export class Pawn extends Piece {
     }
 
     // capture
-    for (var colOffset in [-1, 1]) {
+    for (let colOffset of [-1, 1]) {
       adjSquare = this.square.getAdjacentSquare(rowOffset, colOffset);
       if (
         adjSquare != null &&

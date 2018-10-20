@@ -18,34 +18,47 @@ class ChessComponent extends Component {
   constructor() {
     super();
     this.state = {};
-    this.game = new Game();
+    this.state.game = new Game();
     this.state.activeSquare = null;
     this.state.validMoves = null;
-    this.turn = "W";
+    this.state.turn = "W";
   }
 
   handleClick = square => {
+    // no active square
     if (this.state.activeSquare == null) {
-      //no active square yet
       if (square.piece != null) {
+        // select square
         this.setState({
           activeSquare: square,
           validMoves: square.piece.getMoves()
         });
       }
-    } else {
-      // active square
-      if (
-        square === this.state.activeSquare ||
-        this.state.validMoves == null ||
-        !this.state.validMoves.includes(square)
-      ) {
-        this.setState({ activeSquare: null, validMoves: null });
-        return;
-      } else {
-        console.log("Move to " + square.address);
-      }
+      return;
     }
+
+    // active square
+    if (
+      square === this.state.activeSquare ||
+      this.state.validMoves == null ||
+      !this.state.validMoves.includes(square)
+    ) {
+      // unselect square
+      this.setState({ activeSquare: null, validMoves: null });
+      return;
+    }
+
+    // move
+    const piece = this.state.activeSquare.piece;
+    piece.move(square);
+    this.setState({
+      game: this.state.game,
+      activeSquare: null,
+      validMoves: null
+    });
+
+    // unselect square
+    this.setState({ activeSquare: null, validMoves: null });
   };
 
   getPieceImage = square => {
@@ -75,7 +88,7 @@ class ChessComponent extends Component {
   };
 
   renderBoard() {
-    return this.game.board.rows.map((row, i) => {
+    return this.state.game.board.rows.map((row, i) => {
       return (
         <tr key={i}>
           {row.map(square => {
