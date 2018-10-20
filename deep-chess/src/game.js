@@ -7,6 +7,7 @@ export class Game {
     this.board = new Board(this);
     this.colors = ["W", "B"];
     this.players = { W: new Player("W", "White"), B: new Player("B", "Black") };
+    this.movesHistory = [];
     this.initialize();
   }
 
@@ -120,9 +121,26 @@ export class Piece {
   move(targetSquare) {
     if (targetSquare == null) return;
     const previousSquare = this.square;
+    const takePiece = targetSquare.piece !== null;
     targetSquare.setPiece(this);
     previousSquare.piece = null;
     this.hasMoved = true;
+
+    // add move to history
+    let moveName = "";
+    if (this.name === "P") {
+      // pawn
+      if (takePiece) {
+        moveName = previousSquare.board.colnames[previousSquare.column] + "x";
+      }
+    } else {
+      moveName = this.name;
+      if (takePiece) moveName += "x";
+    }
+    moveName += targetSquare.address;
+    console.log(moveName);
+    targetSquare.board.game.movesHistory.push(moveName);
+    console.log(targetSquare.board.game.movesHistory);
     return true;
   }
 

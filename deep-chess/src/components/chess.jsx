@@ -88,9 +88,12 @@ class ChessComponent extends Component {
   };
 
   renderBoard() {
-    return this.state.game.board.rows.map((row, i) => {
+    const rowsToDisplay = this.state.game.board.rows.slice(0).reverse();
+    //scope="row"
+    return rowsToDisplay.map((row, i) => {
       return (
         <tr key={i}>
+          <th className="rowheader">{row[0].row + 1}</th>
           {row.map(square => {
             return (
               <td
@@ -111,10 +114,23 @@ class ChessComponent extends Component {
     });
   }
 
+  renderHeaders() {
+    let headers = (
+      <tr>
+        <th className="rowheader" />
+        {this.state.game.board.colnames.map((colname, i) => {
+          return <th key={i}>{colname}</th>;
+        })}
+      </tr>
+    );
+    return headers;
+  }
+
   render() {
     return (
       <div>
         <table id="chessboard">
+          <thead>{this.renderHeaders()}</thead>
           <tbody>{this.renderBoard()}</tbody>
         </table>
       </div>
