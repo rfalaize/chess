@@ -156,6 +156,23 @@ class ChessComponent extends Component {
     return headers;
   }
 
+  /*renderMovesViewer() {
+    // group moves by turn
+    
+    let movesByTurn = {};
+    let turn = 1;
+    for (let move of this.game.movesHistory) {
+      if (i % 2 === 1) {
+        movesTurn = [];
+        movesTurn.push(move);
+      } else {
+        movesTurn.push(move);
+        movesTurns.push(movesTurn);
+      }
+    } 
+    return movesViewer;
+  }*/
+
   render() {
     return (
       <div>

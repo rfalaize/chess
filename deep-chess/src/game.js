@@ -7,7 +7,9 @@ export class Game {
     this.board = new Board(this);
     this.colors = ["W", "B"];
     this.players = { W: new Player("W", "White"), B: new Player("B", "Black") };
-    this.movesHistory = [];
+    this.movesHistory = {};
+    this.turn = ""; // W or B
+    this.turnNumber = 0;
     this.initialize();
   }
 
@@ -36,7 +38,8 @@ export class Game {
 
   setNextTurn(color = "W") {
     this.turn = color;
-    console.log(this.turn + " to play");
+    if (color === "W") this.turnNumber += 1;
+    console.log(this.turnNumber + " - " + this.turn + " to play");
   }
 }
 
@@ -122,9 +125,6 @@ export class Piece {
     if (targetSquare == null) return;
     const previousSquare = this.square;
     const takePiece = targetSquare.piece !== null;
-    targetSquare.setPiece(this);
-    previousSquare.piece = null;
-    this.hasMoved = true;
 
     // add move to history
     let moveName = "";
@@ -133,14 +133,45 @@ export class Piece {
       if (takePiece) {
         moveName = previousSquare.board.colnames[previousSquare.column] + "x";
       }
+    } else if (
+      this.name === "K" &&
+      targetSquare.column - previousSquare.column === 2
+    ) {
+      // castle king side
+      moveName = "O-O";
+    } else if (
+      this.name === "K" &&
+      targetSquare.column - previousSquare.column === -2
+    ) {
+      // castle queen side
+      moveName = "O-O-O";
     } else {
       moveName = this.name;
       if (takePiece) moveName += "x";
     }
+
     moveName += targetSquare.address;
-    console.log(moveName);
-    targetSquare.board.game.movesHistory.push(moveName);
+
+    if (this.color === "W") {
+      let turnMoves = [];
+      turnMoves.push(moveName);
+      targetSquare.board.game.movesHistory[
+        targetSquare.board.game.turnNumber
+      ] = turnMoves;
+    } else {
+      let turnMoves =
+        targetSquare.board.game.movesHistory[
+          targetSquare.board.game.turnNumber
+        ];
+      turnMoves.push(moveName);
+    }
     console.log(targetSquare.board.game.movesHistory);
+
+    // move
+    targetSquare.setPiece(this);
+    previousSquare.piece = null;
+    this.hasMoved = true;
+
     return true;
   }
 
