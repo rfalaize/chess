@@ -156,30 +156,38 @@ class ChessComponent extends Component {
     return headers;
   }
 
-  /*renderMovesViewer() {
-    // group moves by turn
-    
-    let movesByTurn = {};
-    let turn = 1;
-    for (let move of this.game.movesHistory) {
-      if (i % 2 === 1) {
-        movesTurn = [];
-        movesTurn.push(move);
-      } else {
-        movesTurn.push(move);
-        movesTurns.push(movesTurn);
-      }
-    } 
-    return movesViewer;
-  }*/
+  renderMovesViewer() {
+    return (
+      <table>
+        <tbody>
+          {Object.keys(this.state.game.movesHistory).map((key, index) => {
+            let turnMoves = this.state.game.movesHistory[key];
+            let moveW = turnMoves[0];
+            let moveB = "";
+            if (turnMoves.length === 2) moveB = turnMoves[1];
+            return (
+              <tr key={index}>
+                <td>{key}</td>
+                <td>{moveW}</td>
+                <td>{moveB}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    );
+  }
 
   render() {
     return (
       <div>
-        <table className="chessboard">
-          <thead>{this.renderHeaders()}</thead>
-          <tbody>{this.renderBoard()}</tbody>
-        </table>
+        <div>
+          <table className="chessboard">
+            <thead>{this.renderHeaders()}</thead>
+            <tbody>{this.renderBoard()}</tbody>
+          </table>
+        </div>
+        <div>{this.renderMovesViewer()}</div>
       </div>
     );
   }
