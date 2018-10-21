@@ -46,8 +46,6 @@ class ChessComponent extends Component {
 
   handleDrop(event, square) {
     event.preventDefault();
-    //console.log("drop");
-    //console.log("to:", square);
     this.setMove(square);
   }
 
@@ -68,13 +66,13 @@ class ChessComponent extends Component {
       if (square.piece.name === "Q") return bQ;
       if (square.piece.name === "K") return bK;
     }
+    return undefined;
   };
 
   getSquareClass = square => {
-    if (square === this.state.activeSquare) return "active-square";
-    if (this.state.validMoves == null) return null;
-    if (this.state.validMoves.includes(square)) return "valid-move";
-    return null;
+    let squareClass = "chessboard-square";
+    if (square === this.state.activeSquare) squareClass += " active-square";
+    return squareClass;
   };
 
   setActiveSquare = square => {
@@ -116,21 +114,24 @@ class ChessComponent extends Component {
     //scope="row"
     return rowsToDisplay.map((row, i) => {
       return (
-        <tr key={i}>
-          <th className="rowheader">{row[0].row + 1}</th>
+        <tr key={i} className="chessboard-row">
+          <th className="chessboard-header-row">{row[0].row + 1}</th>
           {row.map(square => {
             return (
-              <td key={square.address} className={this.getSquareClass(square)}>
+              <td
+                key={square.address}
+                className={this.getSquareClass(square)}
+                onClick={() => this.handleClick(square)}
+                onDragOver={e => this.handleAllowDrop(e)}
+                onDrop={e => this.handleDrop(e, square)}
+              >
                 <div
-                  onClick={() => this.handleClick(square)}
                   onDragStart={e => this.handleDragStart(e, square)}
-                  onDragOver={e => this.handleAllowDrop(e)}
-                  onDrop={e => this.handleDrop(e, square)}
                   draggable
-                  className="draggable"
+                  className="piecediv"
                 >
                   <img
-                    className="piece"
+                    className="pieceimg"
                     src={this.getPieceImage(square)}
                     alt=""
                   />
@@ -145,8 +146,8 @@ class ChessComponent extends Component {
 
   renderHeaders() {
     let headers = (
-      <tr>
-        <th className="rowheader" />
+      <tr className="chessboard-header-column">
+        <th />
         {this.state.game.board.colnames.map((colname, i) => {
           return <th key={i}>{colname}</th>;
         })}
@@ -158,7 +159,7 @@ class ChessComponent extends Component {
   render() {
     return (
       <div>
-        <table id="chessboard">
+        <table className="chessboard">
           <thead>{this.renderHeaders()}</thead>
           <tbody>{this.renderBoard()}</tbody>
         </table>
