@@ -4,16 +4,17 @@
 
 export class Game {
   constructor() {
-    this.board = new Board(this);
     this.colors = ["W", "B"];
     this.players = { W: new Player("W", "White"), B: new Player("B", "Black") };
-    this.movesHistory = {};
-    this.turn = ""; // W or B
-    this.turnNumber = 0;
     this.initialize();
   }
 
   initialize() {
+    this.board = new Board(this);
+    this.movesHistory = {};
+    this.turn = ""; // W or B
+    this.turnNumber = 0;
+
     var row = 0;
     var rowpawn = 1;
     for (var color of this.colors) {
@@ -36,10 +37,30 @@ export class Game {
     this.setNextTurn("W");
   }
 
+  initializeFromPgn(pgn) {
+    console.log("init from pgn...", pgn);
+    this.initialize();
+    if (pgn === "") return this;
+    let moves = pgn.split(" ");
+    let turn = "W";
+    for (let i = 0; i < moves.length; i++) {
+      // move
+
+      if (turn === "W") turn = "B";
+      else turn = "W";
+    }
+
+    return this;
+  }
+
   setNextTurn(color = "W") {
     this.turn = color;
     if (color === "W") this.turnNumber += 1;
     console.log(this.turnNumber + " - " + this.turn + " to play");
+  }
+
+  getMoves() {
+    return this.players[this.turn].getMoves();
   }
 }
 
@@ -437,5 +458,16 @@ export class Player {
   constructor(color = "W", name = "White") {
     this.color = color;
     this.name = name;
+    this.squares = []; // current occupied squares
+  }
+
+  getMoves() {
+    // get all available moves for the player
+    let moves = [];
+    for (let square of this.squares) {
+      let piecesMoves = square.piece.getMoves();
+      moves.concat(piecesMoves);
+    }
+    return moves;
   }
 }

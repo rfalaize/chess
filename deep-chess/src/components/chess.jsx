@@ -115,6 +115,11 @@ class ChessComponent extends Component {
     e.target.focus();
   };
 
+  handleInitializeFromPgn = () => {
+    const pgn = document.getElementById("inputPgn").value;
+    this.setState({ game: this.state.game.initializeFromPgn(pgn) });
+  };
+
   renderBoard() {
     const rowsToDisplay = this.state.game.board.rows.slice(0).reverse();
     //scope="row"
@@ -231,7 +236,11 @@ class ChessComponent extends Component {
                       >
                         Copy
                       </button>
-                      <button type="button" className="btn btn-secondary">
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={this.handleInitializeFromPgn}
+                      >
                         Refresh
                       </button>
                     </div>
