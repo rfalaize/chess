@@ -5,7 +5,6 @@ import "bootstrap/dist/css/bootstrap.css";
 import LoginComponent from "./components/login";
 import ChessComponent from "./components/chess";
 import ErrorComponent from "./components/error";
-import ChessRoomComponent from "./components/chessRoom";
 
 class App extends Component {
   state = {};

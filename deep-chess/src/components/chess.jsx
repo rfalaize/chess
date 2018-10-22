@@ -109,6 +109,12 @@ class ChessComponent extends Component {
     this.setState({ activeSquare: null, validMoves: null });
   };
 
+  handleCopyToClipboard = e => {
+    document.getElementById("inputPgn").select();
+    document.execCommand("copy");
+    e.target.focus();
+  };
+
   renderBoard() {
     const rowsToDisplay = this.state.game.board.rows.slice(0).reverse();
     //scope="row"
@@ -157,37 +163,84 @@ class ChessComponent extends Component {
   }
 
   renderMovesViewer() {
-    return (
-      <table>
-        <tbody>
-          {Object.keys(this.state.game.movesHistory).map((key, index) => {
-            let turnMoves = this.state.game.movesHistory[key];
-            let moveW = turnMoves[0];
-            let moveB = "";
-            if (turnMoves.length === 2) moveB = turnMoves[1];
-            return (
-              <tr key={index}>
-                <td>{key}</td>
-                <td>{moveW}</td>
-                <td>{moveB}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    );
+    return Object.keys(this.state.game.movesHistory).map((key, index) => {
+      let turnMoves = this.state.game.movesHistory[key];
+      let moveW = turnMoves[0];
+      let moveB = "";
+      if (turnMoves.length === 2) moveB = turnMoves[1];
+      return (
+        <tr key={index}>
+          <td>{key}</td>
+          <td>{moveW}</td>
+          <td>{moveB}</td>
+        </tr>
+      );
+    });
+  }
+
+  renderMovesHistoryPgn() {
+    let pgn = "";
+    for (let key in this.state.game.movesHistory) {
+      let turnMoves = this.state.game.movesHistory[key];
+      for (let i = 0; i < turnMoves.length; i++) {
+        pgn += turnMoves[i] + " ";
+      }
+    }
+    return pgn;
   }
 
   render() {
     return (
-      <div>
-        <div>
-          <table className="chessboard">
-            <thead>{this.renderHeaders()}</thead>
-            <tbody>{this.renderBoard()}</tbody>
-          </table>
+      <div className="container-fluid chessroom-background">
+        <div className="row justify-content-around">
+          <div className="col-md">
+            <table className="chessboard">
+              <thead>{this.renderHeaders()}</thead>
+              <tbody>{this.renderBoard()}</tbody>
+            </table>
+          </div>
+          <div className="col-md">
+            <div className="mt-4 mr-4">
+              <table className="table table-light">
+                <thead className="">
+                  <tr>
+                    <th scope="col">Move</th>
+                    <th scope="col">White</th>
+                    <th scope="col">Black</th>
+                  </tr>
+                </thead>
+                <tbody>{this.renderMovesViewer()}</tbody>
+              </table>
+              <form>
+                <div className="input-group mb-3">
+                  <div className="input-group-prepend">
+                    <span className="input-group-text">pgn</span>
+                  </div>
+                  <input
+                    id="inputPgn"
+                    type="text"
+                    className="form-control"
+                    defaultValue={this.renderMovesHistoryPgn()}
+                  />
+                  <div className="input-group-append">
+                    <div className="btn-group" role="group">
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={this.handleCopyToClipboard}
+                      >
+                        Copy
+                      </button>
+                      <button type="button" className="btn btn-secondary">
+                        Refresh
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-        <div>{this.renderMovesViewer()}</div>
       </div>
     );
   }
