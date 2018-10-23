@@ -5,7 +5,10 @@
 export class Game {
   constructor() {
     this.colors = ["W", "B"];
-    this.players = { W: new Player("W", "White"), B: new Player("B", "Black") };
+    this.players = {
+      W: new Player(this, "W", "White"),
+      B: new Player(this, "B", "Black")
+    };
     this.initialize();
   }
 
@@ -45,7 +48,16 @@ export class Game {
     let turn = "W";
     for (let i = 0; i < moves.length; i++) {
       // move
-
+      let move = moves[i];
+      let player = this.players[turn];
+      let playerMoves = player.getPlayerMoves();
+      for (let playerMove of playerMoves) {
+        let playerMovePgn = playerMove.piece.getMovePgn(playerMove.square);
+        if (move == playerMovePgn) {
+          playerMove.piece.move(playerMove.square);
+          break;
+        }
+      }
       if (turn === "W") turn = "B";
       else turn = "W";
     }
@@ -145,37 +157,14 @@ export class Piece {
   move(targetSquare) {
     if (targetSquare == null) return;
     const previousSquare = this.square;
-    const takePiece = targetSquare.piece !== null;
+
+    // get pgn
+    let moveNamePgn = this.getMovePgn(targetSquare);
 
     // add move to history
-    let moveName = "";
-    if (this.name === "P") {
-      // pawn
-      if (takePiece) {
-        moveName = previousSquare.board.colnames[previousSquare.column] + "x";
-      }
-    } else if (
-      this.name === "K" &&
-      targetSquare.column - previousSquare.column === 2
-    ) {
-      // castle king side
-      moveName = "O-O";
-    } else if (
-      this.name === "K" &&
-      targetSquare.column - previousSquare.column === -2
-    ) {
-      // castle queen side
-      moveName = "O-O-O";
-    } else {
-      moveName = this.name;
-      if (takePiece) moveName += "x";
-    }
-
-    moveName += targetSquare.address;
-
     if (this.color === "W") {
       let turnMoves = [];
-      turnMoves.push(moveName);
+      turnMoves.push(moveNamePgn);
       targetSquare.board.game.movesHistory[
         targetSquare.board.game.turnNumber
       ] = turnMoves;
@@ -184,7 +173,7 @@ export class Piece {
         targetSquare.board.game.movesHistory[
           targetSquare.board.game.turnNumber
         ];
-      turnMoves.push(moveName);
+      turnMoves.push(moveNamePgn);
     }
     console.log(targetSquare.board.game.movesHistory);
 
@@ -194,6 +183,38 @@ export class Piece {
     this.hasMoved = true;
 
     return true;
+  }
+
+  getMovePgn(targetSquare) {
+    let moveNamePgn = "";
+    const previousSquare = this.square;
+    const takePiece = targetSquare.piece !== null;
+
+    if (this.name === "P") {
+      // pawn
+      if (takePiece) {
+        moveNamePgn =
+          previousSquare.board.colnames[previousSquare.column] + "x";
+      }
+    } else if (
+      this.name === "K" &&
+      targetSquare.column - previousSquare.column === 2
+    ) {
+      // castle king side
+      moveNamePgn = "O-O";
+    } else if (
+      this.name === "K" &&
+      targetSquare.column - previousSquare.column === -2
+    ) {
+      // castle queen side
+      moveNamePgn = "O-O-O";
+    } else {
+      moveNamePgn = this.name;
+      if (takePiece) moveNamePgn += "x";
+    }
+
+    moveNamePgn += targetSquare.address;
+    return moveNamePgn;
   }
 
   canMove() {
@@ -455,18 +476,25 @@ export class Pawn extends Piece {
 }
 
 export class Player {
-  constructor(color = "W", name = "White") {
+  constructor(game, color = "W", name = "White") {
+    this.game = game;
     this.color = color;
     this.name = name;
     this.squares = []; // current occupied squares
   }
 
-  getMoves() {
+  getPlayerMoves() {
     // get all available moves for the player
     let moves = [];
-    for (let square of this.squares) {
-      let piecesMoves = square.piece.getMoves();
-      moves.concat(piecesMoves);
+    for (let row of this.game.board.rows) {
+      for (let square of row) {
+        if (square.piece != null && square.piece.color == this.color) {
+          let piecesMoves = square.piece.getMoves();
+          for (let pieceMove of piecesMoves) {
+            moves.push({ piece: square.piece, square: pieceMove });
+          }
+        }
+      }
     }
     return moves;
   }
