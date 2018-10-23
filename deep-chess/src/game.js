@@ -41,7 +41,6 @@ export class Game {
   }
 
   initializeFromPgn(pgn) {
-    console.log("init from pgn...", pgn);
     this.initialize();
     if (pgn === "") return this;
     let moves = pgn.split(" ");
