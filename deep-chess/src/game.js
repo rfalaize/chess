@@ -52,7 +52,7 @@ export class Game {
       let playerMoves = player.getPlayerMoves();
       for (let playerMove of playerMoves) {
         let playerMovePgn = playerMove.piece.getMovePgn(playerMove.square);
-        if (move == playerMovePgn) {
+        if (move === playerMovePgn) {
           playerMove.piece.move(playerMove.square);
           break;
         }
@@ -172,9 +172,10 @@ export class Piece {
         targetSquare.board.game.movesHistory[
           targetSquare.board.game.turnNumber
         ];
-      turnMoves.push(moveNamePgn);
+      if (turnMoves != null) {
+        turnMoves.push(moveNamePgn);
+      }
     }
-    console.log(targetSquare.board.game.movesHistory);
 
     // move
     targetSquare.setPiece(this);
@@ -487,7 +488,7 @@ export class Player {
     let moves = [];
     for (let row of this.game.board.rows) {
       for (let square of row) {
-        if (square.piece != null && square.piece.color == this.color) {
+        if (square.piece != null && square.piece.color === this.color) {
           let piecesMoves = square.piece.getMoves();
           for (let pieceMove of piecesMoves) {
             moves.push({ piece: square.piece, square: pieceMove });
