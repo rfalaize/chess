@@ -156,9 +156,23 @@ export class Piece {
   move(targetSquare) {
     if (targetSquare == null) return;
     const previousSquare = this.square;
+    const takePiece = targetSquare.piece !== null;
+
+    // move
+    targetSquare.setPiece(this);
+    previousSquare.piece = null;
+    this.hasMoved = true;
+
+    // update attacked squares
+    const attackedSquares = this.square.board.game.players[
+      this.color
+    ].setAttackedSquares(previousSquare, targetSquare);
+    // ... to be completed
+    // verify if opponent king is in check
+    // verify if opponent king is check mate
 
     // get pgn
-    let moveNamePgn = this.getMovePgn(targetSquare);
+    let moveNamePgn = this.getMovePgn(previousSquare, targetSquare, takePiece);
 
     // add move to history
     if (this.color === "W") {
@@ -177,18 +191,11 @@ export class Piece {
       }
     }
 
-    // move
-    targetSquare.setPiece(this);
-    previousSquare.piece = null;
-    this.hasMoved = true;
-
     return true;
   }
 
-  getMovePgn(targetSquare) {
+  getMovePgn(previousSquare, targetSquare, takePiece) {
     let moveNamePgn = "";
-    const previousSquare = this.square;
-    const takePiece = targetSquare.piece !== null;
 
     if (this.name === "P") {
       // pawn
@@ -481,6 +488,7 @@ export class Player {
     this.color = color;
     this.name = name;
     this.squares = []; // current occupied squares
+    this.attackedSquares = [];
   }
 
   getPlayerMoves() {
@@ -497,5 +505,10 @@ export class Player {
       }
     }
     return moves;
+  }
+
+  setAttackedSquares(previousSquare, targetSquare) {
+    // ...
+    return this.attackedSquares;
   }
 }
