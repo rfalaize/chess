@@ -25,6 +25,9 @@ class ChessComponent extends Component {
   }
 
   handleClick = square => {
+    // check if game has ended
+    if (this.state.game.ended) return;
+
     // no active square
     if (this.state.activeSquare == null) {
       this.setActiveSquare(square);
@@ -194,6 +197,22 @@ class ChessComponent extends Component {
     return pgn;
   }
 
+  renderGameEnded() {
+    if (this.state.game.ended) {
+      let winner = "White";
+      if (this.state.game.endedWinner === "B") winner = "Black";
+      return (
+        <h4>
+          <span className="badge badge-pill badge-primary">
+            {"Checkmate! " + winner + " won"}
+          </span>
+        </h4>
+      );
+    } else {
+      return "";
+    }
+  }
+
   render() {
     return (
       <div className="container-fluid chessroom-background">
@@ -247,6 +266,7 @@ class ChessComponent extends Component {
                   </div>
                 </div>
               </form>
+              <div>{this.renderGameEnded()}</div>
             </div>
           </div>
         </div>

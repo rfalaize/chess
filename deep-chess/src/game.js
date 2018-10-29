@@ -51,7 +51,7 @@ export class Game {
       // move
       let move = moves[i];
       let player = this.players[turn];
-      let playerMoves = player.getPlayerMoves();
+      let playerMoves = player.getMoves();
       for (let playerMove of playerMoves) {
         let playerMovePgn = playerMove.piece.getMovePgn(playerMove.square);
         if (move === playerMovePgn) {
@@ -132,10 +132,6 @@ export class Square {
   setPiece(piece) {
     this.piece = piece;
     piece.square = this;
-    if (this.piece.name === "K") {
-      //keep track of king position for each player
-      this.board.game.players[this.piece.color].kingSquare = this;
-    }
     // update controlled squares
     this.board.game.players[piece.color].squares[this.address] = this;
   }
@@ -155,14 +151,10 @@ export class Piece {
     this.square = null;
     this.name = "";
     this.hasMoved = false;
-    this.attackedSquares = [];
-    // store pinned pieces to speed-up further checks
-    this.isPinned = false; // true if this piece is pinned by potential check
-    this.pinnedPieces = []; // list of pieces pinned by this one
   }
 
   //function to move from one square to another
-  move(targetSquare) {
+  move(targetSquare, simulationMode = false) {
     if (targetSquare == null) return;
     const previousSquare = this.square;
     const takePiece = targetSquare.piece !== null;
@@ -170,42 +162,30 @@ export class Piece {
     // move
     targetSquare.setPiece(this);
     previousSquare.piece = null;
-    this.hasMoved = true;
-
-    // update squares attacked by piece
-    this.setAttackedSquares(previousSquare, targetSquare);
 
     // update squares controlled by current player
     const player = this.square.board.game.players[this.color];
     delete player.squares[previousSquare.address];
 
-    // update current player's pinned pieces
-    player.setPinnedPieces();
+    // simulation mode: return here
+    if (simulationMode) return true;
+
+    // update hasMoved state
+    this.hasMoved = true;
 
     // verify if opponent king is in check
-    let isCheck = false;
-    let opponentColor = "W";
-    if (this.color === "W") opponentColor = "B";
-    const opponentPlayer = this.square.board.game.players[opponentColor];
-    for (let attackedSquare of this.attackedSquares) {
-      if (
-        attackedSquare.piece != null &&
-        attackedSquare.piece.color !== this.color &&
-        attackedSquare.piece.name === "K"
-      ) {
-        isCheck = true;
-        break;
-      }
-    }
+    const opponentPlayer = this.square.board.game.players[
+      this.color
+    ].getOpponent();
+    const isCheck = opponentPlayer.isCheck();
 
     // verify if opponent king is check mate
     let isCheckMate = false;
     if (isCheck) {
       isCheckMate = opponentPlayer.isCheckMate();
+      if (isCheckMate) return true;
+      console.log("Check");
     }
-
-    // update current player's pinned pieces
-    opponentPlayer.setPinnedPieces();
 
     // get move in pgn format
     let moveNamePgn = this.getMovePgn(
@@ -233,21 +213,12 @@ export class Piece {
       }
     }
 
-    // set next turn
+    // set next turn number
     let nextTurn = "W";
     if (this.color === "W") nextTurn = "B";
     this.square.board.game.setNextTurn(nextTurn);
 
     return true;
-  }
-
-  setAttackedSquares() {
-    this.attackedSquares = this.getMoves();
-    return this.attackedSquares;
-  }
-
-  setPinnedPieces() {
-    // method is overloaded for bishop, rook and queen below
   }
 
   getMovePgn(previousSquare, targetSquare, takePiece, isCheck, isCheckMate) {
@@ -284,9 +255,6 @@ export class Piece {
   }
 
   canMove(ignoreTurn = false) {
-    // check if piece is pinned
-    if (this.isPinned) return false;
-
     // check if color is valid
     if (ignoreTurn) return true;
     if (this.color !== this.square.board.game.turn) return false;
@@ -295,6 +263,39 @@ export class Piece {
 
   getName() {
     return this.name + this.color.toLowerCase();
+  }
+
+  simulatedMoveIsCheck(previousSquare, targetSquare) {
+    // function to verify if a move would put the king in check
+    // return true if in check, false otherwise
+
+    // simulate move
+    // this.move(targetSquare, true);
+    const backupPiece = targetSquare.piece;
+    targetSquare.piece = this;
+    previousSquare.piece = null;
+
+    // verify if king would not be in check
+    const player = this.square.board.game.players[this.color];
+    const isCheck = player.isCheck();
+
+    // rollback move
+    // this.move(previousSquare, true);
+    targetSquare.piece = backupPiece;
+    previousSquare.piece = this;
+
+    return isCheck;
+  }
+
+  addValidMove(moves, previousSquare, targetSquare, verifyCheck) {
+    // add move to list if valid
+    if (verifyCheck) {
+      const isCheck = this.simulatedMoveIsCheck(previousSquare, targetSquare);
+      if (!isCheck) moves.push(targetSquare);
+    } else {
+      moves.push(targetSquare);
+    }
+    return moves;
   }
 }
 
@@ -305,31 +306,20 @@ export class King extends Piece {
     this.value = 100;
   }
 
-  getMoves(ignoreTurn = false) {
+  getMoves(verifyCheck = true, ignoreTurn = false) {
     var moves = [];
-    if (!ignoreTurn && !this.canMove()) return moves;
-
-    let opponentColor = "W";
-    if (this.color === "W") opponentColor = "B";
-    const opponentSquares = this.square.board.game.players[opponentColor]
-      .squares;
+    if (!this.canMove(ignoreTurn)) return moves;
     for (var rowOffset = -1; rowOffset <= 1; rowOffset++) {
       for (var colOffset = -1; colOffset <= 1; colOffset++) {
         if (Math.abs(rowOffset) === 1 || Math.abs(colOffset) === 1) {
           var adjSquare = this.square.getAdjacentSquare(rowOffset, colOffset);
-          if (adjSquare == null) continue;
-          if (adjSquare.piece == null || adjSquare.piece.color !== this.color) {
-            var isCheck = false;
-            for (let opponentSquareKey in opponentSquares) {
-              let attackedSquares =
-                opponentSquares[opponentSquareKey].piece.attackedSquares;
-              if (attackedSquares.indexOf(adjSquare) !== -1) {
-                isCheck = true;
-                break;
-              }
-            }
-            if (!isCheck) moves.push(adjSquare);
-          }
+          if (
+            adjSquare == null ||
+            adjSquare.piece == null ||
+            adjSquare.piece.color === this.color
+          )
+            break;
+          moves = this.addValidMove(moves, this.square, adjSquare, verifyCheck);
         }
       }
     }
@@ -342,7 +332,13 @@ export class King extends Piece {
         this.square.getAdjacentSquare(0, 2).piece == null
       ) {
         rook = this.square.getAdjacentSquare(0, 3).piece;
-        if (!rook.hasMoved) moves.push(this.square.getAdjacentSquare(0, 2));
+        if (!rook.hasMoved) {
+          moves = this.addValidMove(
+            moves,
+            this.square,
+            this.square.getAdjacentSquare(0, 2)
+          );
+        }
       }
       // queen side
       if (
@@ -351,7 +347,13 @@ export class King extends Piece {
         this.square.getAdjacentSquare(0, -3).piece == null
       ) {
         rook = this.square.getAdjacentSquare(0, -4).piece;
-        if (!rook.hasMoved) moves.push(this.square.getAdjacentSquare(0, -2));
+        if (!rook.hasMoved) {
+          moves = this.addValidMove(
+            moves,
+            this.square,
+            this.square.getAdjacentSquare(0, -2)
+          );
+        }
       }
     }
 
@@ -385,9 +387,9 @@ export class Queen extends Piece {
     this.value = 9;
   }
 
-  getMoves(ignoreTurn = false) {
+  getMoves(verifyCheck = true, ignoreTurn = false) {
     var moves = [];
-    if (!ignoreTurn && !this.canMove()) return moves;
+    if (!this.canMove(ignoreTurn)) return moves;
     for (let rowDirection of [-1, 0, 1]) {
       for (let colDirection of [-1, 0, 1]) {
         for (let offset = 1; offset < 8; offset++) {
@@ -397,12 +399,28 @@ export class Queen extends Piece {
           );
           if (adjSquare == null) break;
           if (adjSquare.piece != null) {
-            if (adjSquare.piece.color !== this.color) {
-              moves.push(adjSquare);
+            // stop if we encounter a piece
+            if (adjSquare.piece.color === this.color) {
+              // friendly piece
+              break;
+            } else {
+              // opponent piece
+              moves = this.addValidMove(
+                moves,
+                this.square,
+                adjSquare,
+                verifyCheck
+              );
+              break;
             }
-            break;
+          } else {
+            moves = this.addValidMove(
+              moves,
+              this.square,
+              adjSquare,
+              verifyCheck
+            );
           }
-          moves.push(adjSquare);
         }
       }
     }
@@ -418,9 +436,9 @@ export class Rook extends Piece {
     this.value = 5;
   }
 
-  getMoves(ignoreTurn = false) {
+  getMoves(verifyCheck = true, ignoreTurn = false) {
     let moves = [];
-    if (!ignoreTurn && !this.canMove()) return moves;
+    if (!this.canMove(ignoreTurn)) return moves;
     for (let direction of [-1, 1]) {
       for (let rowcol of [0, 1]) {
         for (let offset = 1; offset < 8; offset++) {
@@ -432,81 +450,32 @@ export class Rook extends Piece {
           }
           if (adjSquare == null) break;
           if (adjSquare.piece != null) {
-            if (adjSquare.piece.color !== this.color) {
-              moves.push(adjSquare);
+            // stop if we encounter a piece
+            if (adjSquare.piece.color === this.color) {
+              // friendly piece
+              break;
+            } else {
+              // opponent piece
+              moves = this.addValidMove(
+                moves,
+                this.square,
+                adjSquare,
+                verifyCheck
+              );
+              break;
             }
-            break;
+          } else {
+            moves = this.addValidMove(
+              moves,
+              this.square,
+              adjSquare,
+              verifyCheck
+            );
           }
-          moves.push(adjSquare);
         }
       }
     }
     return moves;
-  }
-
-  setPinnedPieces() {
-    this.pinnedPieces = [];
-    // if opponent king is on the rook's line,
-    // and if there's only one piece between the bishop and the king,
-    // and this piece is from the opponent,
-    // then it is pinned.
-
-    // Example 1: P is pinned
-    //    a b c d e
-    // 1.  | |R| | |
-    // 2.  | | | | |
-    // 3.  | |P| | |
-    // 4.  | | | | |
-    // 5.  | |K| | |
-
-    // Example 2: P is not pinned
-    //    a b c d e
-    // 1.  | |R| | |
-    // 2.  | | | | |
-    // 3.  | |P| | |
-    // 4.  | |Q| | |
-    // 5.  | |K| | |
-
-    for (let direction of [-1, 1]) {
-      for (let rowcol of [0, 1]) {
-        let countOpponentPieces = 0;
-        let opponentKingOnTheWay = false;
-        let pinnedPiece = null;
-        for (let offset = 1; offset < 8; offset++) {
-          let adjSquare = null;
-          if (rowcol === 0) {
-            adjSquare = this.square.getAdjacentSquare(direction * offset, 0);
-          } else {
-            adjSquare = this.square.getAdjacentSquare(0, direction * offset);
-          }
-          if (adjSquare == null) break;
-          if (adjSquare.piece != null) {
-            if (adjSquare.piece.color === this.color) {
-              // stop if we find a friendly piece
-              break;
-            }
-            if (adjSquare.piece.name === "K") {
-              opponentKingOnTheWay = true;
-              break;
-            }
-            // otherwise, we found an opponent piece on the way: increment count
-            countOpponentPieces++;
-            if (countOpponentPieces >= 2) break; // no need to count further, these are not pinned
-            pinnedPiece = adjSquare.piece;
-          }
-        }
-        if (opponentKingOnTheWay && countOpponentPieces === 1) {
-          console.log(
-            "piece " +
-              pinnedPiece.name +
-              " is pinned on " +
-              pinnedPiece.square.address
-          );
-          pinnedPiece.isPinned = true;
-          this.pinnedPieces.push(pinnedPiece);
-        }
-      }
-    }
   }
 }
 
@@ -517,9 +486,9 @@ export class Bishop extends Piece {
     this.value = 3;
   }
 
-  getMoves(ignoreTurn = false) {
+  getMoves(verifyCheck = true, ignoreTurn = false) {
     var moves = [];
-    if (!ignoreTurn && !this.canMove()) return moves;
+    if (!this.canMove(ignoreTurn)) return moves;
     for (let rowDirection of [-1, 1]) {
       for (let colDirection of [-1, 1]) {
         for (let offset = 1; offset < 8; offset++) {
@@ -529,80 +498,33 @@ export class Bishop extends Piece {
           );
           if (adjSquare == null) break;
           if (adjSquare.piece != null) {
-            if (adjSquare.piece.color !== this.color) {
-              moves.push(adjSquare);
+            // stop if we encounter a piece
+            if (adjSquare.piece.color === this.color) {
+              // friendly piece
+              break;
+            } else {
+              // opponent piece
+              moves = this.addValidMove(
+                moves,
+                this.square,
+                adjSquare,
+                verifyCheck
+              );
+              break;
             }
-            break;
+          } else {
+            moves = this.addValidMove(
+              moves,
+              this.square,
+              adjSquare,
+              verifyCheck
+            );
           }
-          moves.push(adjSquare);
         }
       }
     }
 
     return moves;
-  }
-
-  setPinnedPieces() {
-    this.pinnedPieces = [];
-    // if opponent king is on the bishop's diagonal,
-    // and if there's only one piece between the bishop and the king,
-    // and this piece is from the opponent,
-    // then it is pinned.
-
-    // Example 1: P is pinned
-    //    a b c d e
-    // 1. B| | | | |
-    // 2.  | | | | |
-    // 3.  | |P| | |
-    // 4.  | | | | |
-    // 5.  | | | |K|
-
-    // Example 2: P is not pinned
-    //    a b c d e
-    // 1. B| | | | |
-    // 2.  | | | | |
-    // 3.  | |P| | |
-    // 4.  | | |R| |
-    // 5.  | | | |K|
-
-    for (let rowDirection of [-1, 1]) {
-      for (let colDirection of [-1, 1]) {
-        let countOpponentPieces = 0;
-        let opponentKingOnTheWay = false;
-        let pinnedPiece = null;
-        for (let offset = 1; offset < 8; offset++) {
-          var adjSquare = this.square.getAdjacentSquare(
-            rowDirection * offset,
-            colDirection * offset
-          );
-          if (adjSquare == null) break;
-          if (adjSquare.piece != null) {
-            if (adjSquare.piece.color === this.color) {
-              // stop if we find a friendly piece
-              break;
-            }
-            if (adjSquare.piece.name === "K") {
-              opponentKingOnTheWay = true;
-              break;
-            }
-            // otherwise, we found an opponent piece on the way: increment count
-            countOpponentPieces++;
-            if (countOpponentPieces >= 2) break; // no need to count further, these are not pinned
-            pinnedPiece = adjSquare.piece;
-          }
-        }
-        if (opponentKingOnTheWay && countOpponentPieces === 1) {
-          console.log(
-            "piece " +
-              pinnedPiece.name +
-              " is pinned on " +
-              pinnedPiece.square.address
-          );
-          pinnedPiece.isPinned = true;
-          this.pinnedPieces.push(pinnedPiece);
-        }
-      }
-    }
   }
 }
 
@@ -613,9 +535,9 @@ export class Knight extends Piece {
     this.value = 3;
   }
 
-  getMoves(ignoreTurn = false) {
+  getMoves(verifyCheck = true, ignoreTurn = false) {
     var moves = [];
-    if (!ignoreTurn && !this.canMove()) return moves;
+    if (!this.canMove(ignoreTurn)) return moves;
     var offsets = [
       [2, 1],
       [1, 2],
@@ -634,8 +556,19 @@ export class Knight extends Piece {
       if (adjSquare == null) continue;
       if (adjSquare.piece != null && adjSquare.piece.color === this.color)
         continue;
-      moves.push(adjSquare);
+      moves = this.addValidMove(moves, this.square, adjSquare, verifyCheck);
     }
+
+    /*console.log(
+      this.color +
+        " " +
+        this.square.address +
+        " " +
+        this.name +
+        " can move to:",
+      moves
+    );*/
+
     return moves;
   }
 }
@@ -647,9 +580,9 @@ export class Pawn extends Piece {
     this.value = 1;
   }
 
-  getMoves(ignoreTurn = false) {
+  getMoves(verifyCheck = true, ignoreTurn = false) {
     var moves = [];
-    if (!ignoreTurn && !this.canMove()) return moves;
+    if (!this.canMove(ignoreTurn)) return moves;
 
     var adjSquare;
     var rowOffset = 1; //white pawns move by rows ascending
@@ -659,7 +592,7 @@ export class Pawn extends Piece {
     var canMoveForward = false;
     // check if move is on board, and if no piece is blocking
     if (adjSquare != null && adjSquare.piece == null) {
-      moves.push(adjSquare);
+      moves = this.addValidMove(moves, this.square, adjSquare, verifyCheck);
       canMoveForward = true;
     }
 
@@ -671,7 +604,7 @@ export class Pawn extends Piece {
         adjSquare.piece != null &&
         adjSquare.piece.color !== this.color
       ) {
-        moves.push(adjSquare);
+        moves = this.addValidMove(moves, this.square, adjSquare, verifyCheck);
       }
     }
 
@@ -680,8 +613,20 @@ export class Pawn extends Piece {
     // move by 2 squares is allowed on first move
     if (canMoveForward && this.hasMoved === false) {
       adjSquare = this.square.getAdjacentSquare(rowOffset * 2, 0);
-      if (adjSquare != null && adjSquare.piece == null) moves.push(adjSquare);
+      if (adjSquare != null && adjSquare.piece == null) {
+        moves = this.addValidMove(moves, this.square, adjSquare, verifyCheck);
+      }
     }
+
+    /* console.log(
+      this.color +
+        " " +
+        this.square.address +
+        " " +
+        this.name +
+        " can move to:",
+      moves
+    );*/
 
     return moves;
   }
@@ -693,16 +638,15 @@ export class Player {
     this.color = color;
     this.name = name;
     this.squares = {}; // current occupied squares
-    this.kingSquare = null;
   }
 
-  getPlayerMoves() {
+  getMoves() {
     // get all available moves for the player
     let moves = [];
     for (let row of this.game.board.rows) {
       for (let square of row) {
         if (square.piece != null && square.piece.color === this.color) {
-          let piecesMoves = square.piece.getMoves();
+          let piecesMoves = square.piece.getMoves(true, true);
           for (let pieceMove of piecesMoves) {
             moves.push({ piece: square.piece, square: pieceMove });
           }
@@ -712,43 +656,47 @@ export class Player {
     return moves;
   }
 
-  isCheckMate() {
-    // get king moves
-    // note: function is only triggered when the king is checked
-    const kingMoves = this.kingSquare.piece.getMoves(true);
-    if (kingMoves.length > 0) return false;
-
-    // check if pieces can come and protect
-
-    // or if attacker can be removed
-    this.game.ended = true;
-    this.game.endedWinner = this.color;
-    console.log(
-      "Checkmate! ended=" +
-        this.game.ended +
-        "; winner=" +
-        this.game.endedWinner
-    );
-    return true;
-
+  isCheck() {
+    const opponent = this.getOpponent();
+    //console.log("Verify if king in check for player " + this.color + "...");
+    //console.log(opponent.squares);
+    for (let key in opponent.squares) {
+      let opponentSquare = opponent.squares[key];
+      if (opponentSquare.piece == null) continue;
+      let attackedSquares = opponent.squares[key].piece.getMoves(false, true);
+      if (attackedSquares.length === 0) continue;
+      for (let attackedSquare of attackedSquares) {
+        if (
+          attackedSquare.piece != null &&
+          attackedSquare.piece.name === "K" &&
+          attackedSquare.piece.color === this.color
+        ) {
+          // one of the opponent pieces can attack player's king
+          return true;
+        }
+      }
+    }
     return false;
   }
 
-  setPinnedPieces() {
-    // unpin all oppenent pieces
+  isCheckMate() {
+    // get all available moves
+    let availableMoves = this.getMoves();
+    if (availableMoves.length > 0) {
+      console.log(availableMoves.length + " available moves:", availableMoves);
+      return false;
+    }
+
+    // or if attacker can be removed
+    this.game.ended = true;
+    this.game.endedWinner = this.getOpponent().color;
+    console.log("Checkmate! Winner is " + this.game.endedWinner);
+    return true;
+  }
+
+  getOpponent() {
     let opponentColor = "W";
     if (this.color === "W") opponentColor = "B";
-    const opponentPlayer = this.game.players[opponentColor];
-    for (let opponentSquareKey in opponentPlayer.squares) {
-      let opponentPiece = opponentPlayer.squares[opponentSquareKey].piece;
-      opponentPiece.isPinned = false;
-    }
-    // set opponent pinned pieces
-    for (let squareKey in this.squares) {
-      let piece = this.squares[squareKey].piece;
-      if (piece.name === "B" || piece.name === "R" || piece.name === "Q") {
-        piece.setPinnedPieces();
-      }
-    }
+    return this.game.players[opponentColor];
   }
 }
