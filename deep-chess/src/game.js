@@ -430,7 +430,12 @@ export class King extends Piece {
         this.square.getAdjacentSquare(0, 2).piece == null
       ) {
         rook = this.square.getAdjacentSquare(0, 3).piece;
-        if (!rook.hasMoved) {
+        if (
+          rook != null &&
+          rook.name === "R" &&
+          rook.color === this.color &&
+          !rook.hasMoved
+        ) {
           let isValidCastle = true;
           let opponentMoves = this.square.board.game.players[this.color]
             .getOpponent()
@@ -460,7 +465,12 @@ export class King extends Piece {
         this.square.getAdjacentSquare(0, -3).piece == null
       ) {
         rook = this.square.getAdjacentSquare(0, -4).piece;
-        if (!rook.hasMoved) {
+        if (
+          rook != null &&
+          rook.name === "R" &&
+          rook.color === this.color &&
+          !rook.hasMoved
+        ) {
           let isValidCastle = true;
           let opponentMoves = this.square.board.game.players[this.color]
             .getOpponent()

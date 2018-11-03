@@ -12,9 +12,9 @@ class App extends Component {
   render() {
     return (
       <BrowserRouter>
-        <div>
+        <div style={{ height: "100%" }}>
           <Switch>
-            <Route path="/" component={ChessComponent} exact />
+            <Route path="/" component={LoginComponent} exact />
             <Route path="/login" component={LoginComponent} />
             <Route path="/chess" component={ChessComponent} />
             <Route component={ErrorComponent} />

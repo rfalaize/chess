@@ -1,6 +1,9 @@
 .background {
   background-image: url("./../assets/img/chess1.jpg");
-  background-size: 100%;
+  /* background-size: 100%; */
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  height: 100%;
 }
 
 .card-signin {

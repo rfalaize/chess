@@ -1,5 +1,6 @@
 .chessroom-background {
   background-color: rgb(49, 46, 43);
+  height: 100%;
 }
 
 .chessboard .chessboard-row {
