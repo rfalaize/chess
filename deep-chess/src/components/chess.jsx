@@ -171,8 +171,8 @@ class ChessComponent extends Component {
   }
 
   renderMovesViewer() {
-    return Object.keys(this.state.game.movesHistory).map((key, index) => {
-      let turnMoves = this.state.game.movesHistory[key];
+    let tb = Object.keys(this.state.game.movesHistoryPgn).map((key, index) => {
+      let turnMoves = this.state.game.movesHistoryPgn[key];
       let moveW = turnMoves[0];
       let moveB = "";
       if (turnMoves.length === 2) moveB = turnMoves[1];
@@ -184,6 +184,22 @@ class ChessComponent extends Component {
         </tr>
       );
     });
+    // add scores
+    tb.push(
+      <tr>
+        <td>&nbsp;</td>
+        <td> </td>
+        <td> </td>
+      </tr>
+    );
+    tb.push(
+      <tr>
+        <td>Scores</td>
+        <td>{this.state.game.players["W"].score}</td>
+        <td>{this.state.game.players["B"].score}</td>
+      </tr>
+    );
+    return tb;
   }
 
   renderMovesHistoryPgn() {
@@ -195,11 +211,13 @@ class ChessComponent extends Component {
       let winner = "White";
       if (this.state.game.endedWinner === "B") winner = "Black";
       return (
-        <h4>
-          <span className="badge badge-pill badge-primary">
-            {"Checkmate! " + winner + " won"}
-          </span>
-        </h4>
+        <div>
+          <h4>
+            <span className="badge badge-pill badge-primary">
+              {"Checkmate! " + winner + " won"}
+            </span>
+          </h4>
+        </div>
       );
     } else {
       return "";
@@ -218,7 +236,7 @@ class ChessComponent extends Component {
           </div>
           <div className="col-md">
             <div className="mt-4 mr-4">
-              <table className="table table-light">
+              <table className="table table-sm table-dark">
                 <thead className="">
                   <tr>
                     <th scope="col">Move</th>

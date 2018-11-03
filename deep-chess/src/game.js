@@ -14,7 +14,8 @@ export class Game {
 
   initialize() {
     this.board = new Board(this);
-    this.movesHistory = {};
+    this.movesHistory = []; // list of tuples: {piece, squareFrom, squareTo}
+    this.movesHistoryPgn = {};
     this.turn = ""; // W or B
     this.turnNumber = 0;
     this.ended = false;
@@ -50,14 +51,17 @@ export class Game {
     for (let i = 0; i < moves.length; i++) {
       // move
       let move = moves[i];
+      if (move.indexOf(".") > -1) continue;
       let player = this.players[turn];
       let playerMoves = player.getMoves();
       for (let playerMove of playerMoves) {
+        // TO DO - get correct PGN move
+        /*
         let playerMovePgn = playerMove.piece.getMovePgn(playerMove.square);
         if (move === playerMovePgn) {
           playerMove.piece.move(playerMove.square);
           break;
-        }
+        }*/
       }
       if (turn === "W") turn = "B";
       else turn = "W";
@@ -69,7 +73,7 @@ export class Game {
   setNextTurn(color = "W") {
     this.turn = color;
     if (color === "W") this.turnNumber += 1;
-    console.log(this.turnNumber + " - " + this.turn + " to play");
+    // console.log(this.turnNumber + " - " + this.turn + " to play");
   }
 
   getMoves() {
@@ -79,8 +83,8 @@ export class Game {
   getMovesHistoryPgn() {
     let pgn = "";
     let turn = 0;
-    for (let key in this.movesHistory) {
-      let turnMoves = this.movesHistory[key];
+    for (let key in this.movesHistoryPgn) {
+      let turnMoves = this.movesHistoryPgn[key];
       turn++;
       if (pgn === "") pgn += turn + ".";
       else pgn += " " + turn + ".";
@@ -145,6 +149,10 @@ export class Square {
   }
 
   setPiece(piece) {
+    // take piece
+    if (this.piece != null && this.piece.color !== piece.color) {
+      this.board.game.players[piece.color].capturePiece(this);
+    }
     this.piece = piece;
     piece.square = this;
     // update controlled squares
@@ -185,15 +193,31 @@ export class Piece {
     // simulation mode: return here
     if (simulationMode) return true;
 
-    //pawn promotion
+    // pawn
     let isPawnPromoted = false;
     if (this.name === "P") {
+      // promotion
       if (
         (this.color === "W" && this.square.row === 7) ||
         (this.color === "B" && this.square.row === 0)
       ) {
         targetSquare.setPiece(new Queen(this.color));
         isPawnPromoted = true;
+      }
+      // en passant
+      if (
+        Math.abs(targetSquare.row - previousSquare.row) === 1 &&
+        Math.abs(targetSquare.column - previousSquare.column) === 1 &&
+        takePiece === false
+      ) {
+        // if pawn moves in diagonal on an empty square, it's en passant
+        let enPassantSquare = previousSquare.getAdjacentSquare(
+          0,
+          targetSquare.column - previousSquare.column
+        );
+        this.square.board.game.players[this.color].capturePiece(
+          enPassantSquare
+        );
       }
     }
 
@@ -228,18 +252,23 @@ export class Piece {
     if (this.color === "W") {
       let turnMoves = [];
       turnMoves.push(moveNamePgn);
-      targetSquare.board.game.movesHistory[
+      targetSquare.board.game.movesHistoryPgn[
         targetSquare.board.game.turnNumber
       ] = turnMoves;
     } else {
       let turnMoves =
-        targetSquare.board.game.movesHistory[
+        targetSquare.board.game.movesHistoryPgn[
           targetSquare.board.game.turnNumber
         ];
       if (turnMoves != null) {
         turnMoves.push(moveNamePgn);
       }
     }
+    targetSquare.board.game.movesHistory.push({
+      piece: this,
+      squareFrom: previousSquare,
+      squareTo: targetSquare
+    });
 
     // set next turn number
     let nextTurn = "W";
@@ -306,7 +335,6 @@ export class Piece {
     // return true if in check, false otherwise
 
     // simulate move
-    // this.move(targetSquare, true);
     const backupPiece = targetSquare.piece;
     targetSquare.piece = this;
     previousSquare.piece = null;
@@ -316,7 +344,6 @@ export class Piece {
     const isCheck = player.isCheck();
 
     // rollback move
-    // this.move(previousSquare, true);
     targetSquare.piece = backupPiece;
     previousSquare.piece = this;
 
@@ -650,7 +677,35 @@ export class Pawn extends Piece {
       }
     }
 
-    // TO DO: en passant
+    // capture en passant
+    for (let colOffset of [-1, 1]) {
+      adjSquare = this.square.getAdjacentSquare(0, colOffset);
+      if (
+        adjSquare != null &&
+        adjSquare.piece != null &&
+        adjSquare.piece.color !== this.color &&
+        adjSquare.piece.name === "P" &&
+        this.square.board.game.movesHistory.length > 0
+      ) {
+        // get previous opponent move
+        let previousOpponentMove = this.square.board.game.movesHistory[
+          this.square.board.game.movesHistory.length - 1
+        ];
+        // if previous move was a pawn advancing 2 squares, then en passant is authorized
+        if (
+          previousOpponentMove.squareTo.address === adjSquare.address &&
+          previousOpponentMove.piece.name === "P" &&
+          Math.abs(
+            previousOpponentMove.squareFrom.row -
+              previousOpponentMove.squareTo.row
+          ) === 2
+        ) {
+          adjSquare = this.square.getAdjacentSquare(rowOffset, colOffset);
+          moves = this.addValidMove(moves, this.square, adjSquare, verifyCheck);
+          console.log("En passant authorized on square " + adjSquare.address);
+        }
+      }
+    }
 
     // move by 2 squares is allowed on first move
     if (canMoveForward && this.hasMoved === false) {
@@ -670,6 +725,8 @@ export class Player {
     this.color = color;
     this.name = name;
     this.squares = {}; // current occupied squares
+    this.capturedPieces = [];
+    this.score = 0;
   }
 
   getMoves() {
@@ -730,5 +787,13 @@ export class Player {
     let opponentColor = "W";
     if (this.color === "W") opponentColor = "B";
     return this.game.players[opponentColor];
+  }
+
+  capturePiece(targetSquare) {
+    if (targetSquare.piece == null) return;
+    this.capturedPieces.push(targetSquare.piece);
+    this.score += targetSquare.piece.value;
+    targetSquare.piece = null;
+    console.log(this.color + " captured a piece. Score=" + this.score);
   }
 }

@@ -14,7 +14,7 @@ class App extends Component {
       <BrowserRouter>
         <div>
           <Switch>
-            <Route path="/" component={LoginComponent} exact />
+            <Route path="/" component={ChessComponent} exact />
             <Route path="/login" component={LoginComponent} />
             <Route path="/chess" component={ChessComponent} />
             <Route component={ErrorComponent} />
