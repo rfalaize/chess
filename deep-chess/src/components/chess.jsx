@@ -187,14 +187,7 @@ class ChessComponent extends Component {
   }
 
   renderMovesHistoryPgn() {
-    let pgn = "";
-    for (let key in this.state.game.movesHistory) {
-      let turnMoves = this.state.game.movesHistory[key];
-      for (let i = 0; i < turnMoves.length; i++) {
-        pgn += turnMoves[i] + " ";
-      }
-    }
-    return pgn;
+    return this.state.game.getMovesHistoryPgn();
   }
 
   renderGameEnded() {

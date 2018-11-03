@@ -75,6 +75,21 @@ export class Game {
   getMoves() {
     return this.players[this.turn].getMoves();
   }
+
+  getMovesHistoryPgn() {
+    let pgn = "";
+    let turn = 0;
+    for (let key in this.movesHistory) {
+      let turnMoves = this.movesHistory[key];
+      turn++;
+      if (pgn === "") pgn += turn + ".";
+      else pgn += " " + turn + ".";
+      for (let i = 0; i < turnMoves.length; i++) {
+        pgn += " " + turnMoves[i];
+      }
+    }
+    return pgn;
+  }
 }
 
 export class Board {
@@ -170,6 +185,18 @@ export class Piece {
     // simulation mode: return here
     if (simulationMode) return true;
 
+    //pawn promotion
+    let isPawnPromoted = false;
+    if (this.name === "P") {
+      if (
+        (this.color === "W" && this.square.row === 7) ||
+        (this.color === "B" && this.square.row === 0)
+      ) {
+        targetSquare.setPiece(new Queen(this.color));
+        isPawnPromoted = true;
+      }
+    }
+
     // update hasMoved state
     this.hasMoved = true;
 
@@ -193,7 +220,8 @@ export class Piece {
       targetSquare,
       takePiece,
       isCheck,
-      isCheckMate
+      isCheckMate,
+      isPawnPromoted
     );
 
     // add move to history
@@ -221,7 +249,14 @@ export class Piece {
     return true;
   }
 
-  getMovePgn(previousSquare, targetSquare, takePiece, isCheck, isCheckMate) {
+  getMovePgn(
+    previousSquare,
+    targetSquare,
+    takePiece,
+    isCheck,
+    isCheckMate,
+    isPawnPromoted
+  ) {
     let moveNamePgn = "";
 
     if (this.name === "P") {
@@ -248,6 +283,7 @@ export class Piece {
     }
 
     moveNamePgn += targetSquare.address;
+    if (isPawnPromoted) moveNamePgn += "=Q";
     if (isCheckMate) moveNamePgn += "#";
     else if (isCheck) moveNamePgn += "+";
 
@@ -313,13 +349,30 @@ export class King extends Piece {
       for (var colOffset = -1; colOffset <= 1; colOffset++) {
         if (Math.abs(rowOffset) === 1 || Math.abs(colOffset) === 1) {
           var adjSquare = this.square.getAdjacentSquare(rowOffset, colOffset);
-          if (
-            adjSquare == null ||
-            adjSquare.piece == null ||
-            adjSquare.piece.color === this.color
-          )
-            break;
-          moves = this.addValidMove(moves, this.square, adjSquare, verifyCheck);
+          if (adjSquare == null) continue;
+          if (adjSquare.piece != null) {
+            // stop if we encounter a piece
+            if (adjSquare.piece.color === this.color) {
+              // friendly piece
+              continue;
+            } else {
+              // opponent piece
+              moves = this.addValidMove(
+                moves,
+                this.square,
+                adjSquare,
+                verifyCheck
+              );
+              continue;
+            }
+          } else {
+            moves = this.addValidMove(
+              moves,
+              this.square,
+              adjSquare,
+              verifyCheck
+            );
+          }
         }
       }
     }
@@ -558,17 +611,6 @@ export class Knight extends Piece {
         continue;
       moves = this.addValidMove(moves, this.square, adjSquare, verifyCheck);
     }
-
-    /*console.log(
-      this.color +
-        " " +
-        this.square.address +
-        " " +
-        this.name +
-        " can move to:",
-      moves
-    );*/
-
     return moves;
   }
 }
@@ -617,16 +659,6 @@ export class Pawn extends Piece {
         moves = this.addValidMove(moves, this.square, adjSquare, verifyCheck);
       }
     }
-
-    /* console.log(
-      this.color +
-        " " +
-        this.square.address +
-        " " +
-        this.name +
-        " can move to:",
-      moves
-    );*/
 
     return moves;
   }
