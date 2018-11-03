@@ -46,7 +46,8 @@ export class Game {
   initializeFromPgn(pgn) {
     this.initialize();
     if (pgn === "") return this;
-    let moves = pgn.split(" ");
+    // TO DO - get correct PGN move
+    /* let moves = pgn.split(" ");
     let turn = "W";
     for (let i = 0; i < moves.length; i++) {
       // move
@@ -55,19 +56,18 @@ export class Game {
       let player = this.players[turn];
       let playerMoves = player.getMoves();
       for (let playerMove of playerMoves) {
-        // TO DO - get correct PGN move
-        /*
+        
         let playerMovePgn = playerMove.piece.getMovePgn(playerMove.square);
         if (move === playerMovePgn) {
           playerMove.piece.move(playerMove.square);
           break;
-        }*/
+        }
       }
       if (turn === "W") turn = "B";
       else turn = "W";
     }
 
-    return this;
+    return this;*/
   }
 
   setNextTurn(color = "W") {
@@ -234,8 +234,21 @@ export class Piece {
     let isCheckMate = false;
     if (isCheck) {
       isCheckMate = opponentPlayer.isCheckMate();
-      if (isCheckMate) return true;
-      console.log("Check");
+    }
+
+    // verify if draw
+    let isDraw = false;
+    if (!isCheck) {
+      let opponentMoves = this.square.board.game.players[this.color]
+        .getOpponent()
+        .getMoves(true);
+      if (opponentMoves.length === 0) isDraw = true;
+      if (isDraw) {
+        this.square.board.game.ended = true;
+        this.square.board.game.endedWinner = "D";
+        console.log("Game ended draw.");
+        return true;
+      }
     }
 
     // get move in pgn format
@@ -269,6 +282,11 @@ export class Piece {
       squareFrom: previousSquare,
       squareTo: targetSquare
     });
+
+    // check if game has ended
+    if (isCheckMate || isDraw) {
+      return true;
+    }
 
     // set next turn number
     let nextTurn = "W";
@@ -369,7 +387,7 @@ export class King extends Piece {
     this.value = 100;
   }
 
-  getMoves(verifyCheck = true, ignoreTurn = false) {
+  getMoves(verifyCheck = true, ignoreTurn = false, ignoreCastle = false) {
     var moves = [];
     if (!this.canMove(ignoreTurn)) return moves;
     for (var rowOffset = -1; rowOffset <= 1; rowOffset++) {
@@ -404,7 +422,7 @@ export class King extends Piece {
       }
     }
 
-    if (!this.hasMoved) {
+    if (!this.hasMoved && !ignoreCastle) {
       var rook;
       // king side
       if (
@@ -413,11 +431,26 @@ export class King extends Piece {
       ) {
         rook = this.square.getAdjacentSquare(0, 3).piece;
         if (!rook.hasMoved) {
-          moves = this.addValidMove(
-            moves,
-            this.square,
-            this.square.getAdjacentSquare(0, 2)
-          );
+          let isValidCastle = true;
+          let opponentMoves = this.square.board.game.players[this.color]
+            .getOpponent()
+            .getMoves(false, true, true); // ignore turn and castle
+          const kingSquareStep1 = this.square.getAdjacentSquare(0, 1);
+          const kingSquareStep2 = this.square.getAdjacentSquare(0, 2);
+          for (let opponentMove of opponentMoves) {
+            if (
+              opponentMove.square.address === this.square.address ||
+              opponentMove.square.address === kingSquareStep1.address ||
+              opponentMove.square.address === kingSquareStep2.address
+            ) {
+              // king is in check, or would be in check on the way => invalid move
+              isValidCastle = false;
+              break;
+            }
+          }
+          if (isValidCastle) {
+            moves.push(this.square.getAdjacentSquare(0, 2));
+          }
         }
       }
       // queen side
@@ -428,11 +461,26 @@ export class King extends Piece {
       ) {
         rook = this.square.getAdjacentSquare(0, -4).piece;
         if (!rook.hasMoved) {
-          moves = this.addValidMove(
-            moves,
-            this.square,
-            this.square.getAdjacentSquare(0, -2)
-          );
+          let isValidCastle = true;
+          let opponentMoves = this.square.board.game.players[this.color]
+            .getOpponent()
+            .getMoves(false, true, true); // ignore turn and castle
+          const kingSquareStep1 = this.square.getAdjacentSquare(0, -1);
+          const kingSquareStep2 = this.square.getAdjacentSquare(0, -2);
+          for (let opponentMove of opponentMoves) {
+            if (
+              opponentMove.square.address === this.square.address ||
+              opponentMove.square.address === kingSquareStep1.address ||
+              opponentMove.square.address === kingSquareStep2.address
+            ) {
+              // king is in check, or would be in check on the way => invalid move
+              isValidCastle = false;
+              break;
+            }
+          }
+          if (isValidCastle) {
+            moves.push(this.square.getAdjacentSquare(0, 2));
+          }
         }
       }
     }
@@ -729,13 +777,17 @@ export class Player {
     this.score = 0;
   }
 
-  getMoves() {
+  getMoves(verifyCheck = true, ignoreTurn = true, ignoreCastle = false) {
     // get all available moves for the player
     let moves = [];
     for (let row of this.game.board.rows) {
       for (let square of row) {
         if (square.piece != null && square.piece.color === this.color) {
-          let piecesMoves = square.piece.getMoves(true, true);
+          let piecesMoves = square.piece.getMoves(
+            verifyCheck,
+            ignoreTurn,
+            ignoreCastle
+          );
           for (let pieceMove of piecesMoves) {
             moves.push({ piece: square.piece, square: pieceMove });
           }
@@ -745,6 +797,18 @@ export class Player {
     return moves;
   }
 
+  hasAvailableMove() {
+    for (let row of this.game.board.rows) {
+      for (let square of row) {
+        if (square.piece != null && square.piece.color === this.color) {
+          let piecesMoves = square.piece.getMoves(true, true, false);
+          if (piecesMoves.length > 0) return true;
+        }
+      }
+    }
+    return false;
+  }
+
   isCheck() {
     const opponent = this.getOpponent();
     //console.log("Verify if king in check for player " + this.color + "...");
@@ -752,7 +816,13 @@ export class Player {
     for (let key in opponent.squares) {
       let opponentSquare = opponent.squares[key];
       if (opponentSquare.piece == null) continue;
-      let attackedSquares = opponent.squares[key].piece.getMoves(false, true);
+      let attackedSquares = [];
+      if (opponentSquare.piece.name === "K") {
+        // ignore castle
+        attackedSquares = opponentSquare.piece.getMoves(false, true, true);
+      } else {
+        attackedSquares = opponentSquare.piece.getMoves(false, true);
+      }
       if (attackedSquares.length === 0) continue;
       for (let attackedSquare of attackedSquares) {
         if (

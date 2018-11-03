@@ -186,14 +186,14 @@ class ChessComponent extends Component {
     });
     // add scores
     tb.push(
-      <tr>
+      <tr key="emptyrow">
         <td>&nbsp;</td>
         <td> </td>
         <td> </td>
       </tr>
     );
     tb.push(
-      <tr>
+      <tr key="scores">
         <td>Scores</td>
         <td>{this.state.game.players["W"].score}</td>
         <td>{this.state.game.players["B"].score}</td>
@@ -208,14 +208,16 @@ class ChessComponent extends Component {
 
   renderGameEnded() {
     if (this.state.game.ended) {
-      let winner = "White";
-      if (this.state.game.endedWinner === "B") winner = "Black";
+      let msg = "White won by checkmate.";
+      if (this.state.game.endedWinner === "B") {
+        msg = "Black won by checkmate.";
+      } else if (this.state.game.endedWinner === "D") {
+        msg = "Game ended in draw.";
+      }
       return (
         <div>
           <h4>
-            <span className="badge badge-pill badge-primary">
-              {"Checkmate! " + winner + " won"}
-            </span>
+            <span className="badge badge-pill badge-primary">{msg}</span>
           </h4>
         </div>
       );
