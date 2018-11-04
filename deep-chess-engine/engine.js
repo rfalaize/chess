@@ -115,14 +115,18 @@ class Game {
       let movesArray = JSON.parse(json);
       this.initialize();
       for (let move of movesArray) {
-        let squareFrom = this.board.getSquareByAddress(move.from);
-        let squareTo = this.board.getSquareByAddress(move.to);
-        squareFrom.piece.move(squareTo);
+        this.playDeserializedMove(move);
       }
     } catch (error) {
       console.error(error);
       throw new error("Incorrect move: ", error);
     }
+  }
+
+  playDeserializedMove(move) {
+    let squareFrom = this.board.getSquareByAddress(move.from);
+    let squareTo = this.board.getSquareByAddress(move.to);
+    squareFrom.piece.move(squareTo);
   }
 }
 
