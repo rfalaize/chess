@@ -1,0 +1,11 @@
+# compile
+npm run build
+
+# increment version
+npm version patch
+npm version minor
+npm version major
+
+# publish
+npm publish
+npm publish --access=public
