@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Game } from "../game";
+import { Game } from "@rfalaize/deep-chess-engine/game/game";
 import "./chess.css";
 import wK from "./../assets/img/pieces/wK.png";
 import wN from "./../assets/img/pieces/wN.png";

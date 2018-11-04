@@ -1,0 +1,19 @@
+{
+  "name": "deep-chess-server",
+  "version": "1.0.0",
+  "description": "Node web server running in the cloud, exposing chess-chess-engine agents.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "chess",
+    "webserver",
+    "node",
+    "reinforcement",
+    "learning"
+  ],
+  "author": "rfalaize",
+  "license": "ISC"
+}
