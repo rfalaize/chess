@@ -4,8 +4,11 @@ node_js:
   - "stable"
 
 before_script:
+  - echo "PreBuild script..."
   - cd ./deep-chess-engine
-  - echo "In deep chess folder"
+  - export PATH=./node_modules/.bin:$PATH
+  - echo "PreBuild done."
 
 after_script:
-  - echo "Done !"
+  - echo "PostBuild script..."
+  - echo "PostBuild done."
