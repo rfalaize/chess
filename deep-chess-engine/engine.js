@@ -2,7 +2,7 @@
     Chess engine
 */
 
-export class Game {
+class Game {
   constructor() {
     this.colors = ["W", "B"];
     this.players = {
@@ -128,7 +128,7 @@ export class Game {
   }
 }
 
-export class Board {
+class Board {
   constructor(game) {
     this.game = game;
     this.rownames = ["1", "2", "3", "4", "5", "6", "7", "8"];
@@ -171,7 +171,7 @@ export class Board {
   }
 }
 
-export class Square {
+class Square {
   constructor(board, i, j) {
     this.board = board;
     this.row = i;
@@ -200,7 +200,7 @@ export class Square {
   }
 }
 
-export class Piece {
+class Piece {
   constructor(color) {
     this.color = color;
     this.square = null;
@@ -412,7 +412,7 @@ export class Piece {
   }
 }
 
-export class King extends Piece {
+class King extends Piece {
   constructor(color) {
     super(color);
     this.name = "K";
@@ -550,7 +550,7 @@ export class King extends Piece {
   }
 }
 
-export class Queen extends Piece {
+class Queen extends Piece {
   constructor(color) {
     super(color);
     this.name = "Q";
@@ -599,7 +599,7 @@ export class Queen extends Piece {
   }
 }
 
-export class Rook extends Piece {
+class Rook extends Piece {
   constructor(color) {
     super(color);
     this.name = "R";
@@ -649,7 +649,7 @@ export class Rook extends Piece {
   }
 }
 
-export class Bishop extends Piece {
+class Bishop extends Piece {
   constructor(color) {
     super(color);
     this.name = "B";
@@ -698,7 +698,7 @@ export class Bishop extends Piece {
   }
 }
 
-export class Knight extends Piece {
+class Knight extends Piece {
   constructor(color) {
     super(color);
     this.name = "N";
@@ -732,7 +732,7 @@ export class Knight extends Piece {
   }
 }
 
-export class Pawn extends Piece {
+class Pawn extends Piece {
   constructor(color) {
     super(color);
     this.name = "P";
@@ -809,7 +809,7 @@ export class Pawn extends Piece {
   }
 }
 
-export class Player {
+class Player {
   constructor(game, color = "W", name = "White") {
     this.game = game;
     this.color = color;
@@ -909,3 +909,16 @@ export class Player {
     console.log(this.color + " captured a piece. Score=" + this.score);
   }
 }
+
+// exports
+module.exports = {
+  Game,
+  Board,
+  Square,
+  King,
+  Queen,
+  Rook,
+  Bishop,
+  Knight,
+  Pawn
+};

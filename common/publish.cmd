@@ -3,6 +3,8 @@ cd ./../deep-chess-engine
 
 rem Increment patch...
 npm version patch
+::npm version minor
+::npm version major
 
 rem Publish engine...
 npm publish --access=public

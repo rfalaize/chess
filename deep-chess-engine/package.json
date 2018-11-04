@@ -2,9 +2,9 @@
   "name": "@rfalaize/deep-chess-engine",
   "version": "1.0.2",
   "description": "Simple chess engine to play with deep reinforcement learning",
-  "main": "index.js",
+  "main": "game.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha || true"
   },
   "keywords": [
     "chess",
@@ -14,5 +14,12 @@
     "learning"
   ],
   "author": "rfalaize",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0"
+  },
+  "dependencies": {
+    "express": "^4.16.4"
+  }
 }
