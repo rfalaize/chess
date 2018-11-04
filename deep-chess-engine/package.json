@@ -1,6 +1,6 @@
 {
   "name": "@rfalaize/deep-chess-engine",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Simple chess engine to play with deep reinforcement learning",
   "main": "game.js",
   "scripts": {

@@ -19,6 +19,8 @@ describe("Engine", function() {
       assert.equal("P", pawn.name);
       let moves = pawn.getMoves();
       assert.equal(2, moves.length);
+      assert.equal("e3", moves[0].address);
+      assert.equal("e4", moves[1].address);
     });
   });
 });

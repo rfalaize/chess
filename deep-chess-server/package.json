@@ -17,6 +17,6 @@
   "author": "rfalaize",
   "license": "ISC",
   "dependencies": {
-    "@rfalaize/deep-chess-engine": "^1.0.2"
+    "@rfalaize/deep-chess-engine": "^1.0.4"
   }
 }
