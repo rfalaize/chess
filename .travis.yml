@@ -3,4 +3,9 @@ language: node_js
 node_js:
   - "stable"
 
-before_script: cd ./deep-chess-engine
+before_script:
+  - cd ./deep-chess-engine
+  - echo "In deep chess folder"
+
+after_script:
+  - echo "Done !"
