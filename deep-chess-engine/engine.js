@@ -115,12 +115,10 @@ class Game {
       let movesArray = JSON.parse(json);
       this.initialize();
       for (let move of movesArray) {
-        let squareFrom = this.getSquareByAddress(move.from);
-        let squareTo = this.getSquareByAddress(move.to);
-        console.log(squareFrom.address + " > " + squareTo.address);
+        let squareFrom = this.board.getSquareByAddress(move.from);
+        let squareTo = this.board.getSquareByAddress(move.to);
         squareFrom.piece.move(squareTo);
       }
-      console.log("Game deserialized: " + this.serializeHistory());
     } catch (error) {
       console.error(error);
       throw new error("Incorrect move: ", error);
