@@ -5,7 +5,9 @@ node_js:
 
 before_script:
   - echo "************************************ PRE BUILD SCRIPT **********************************"
+  - pwd
   - cd ./deep-chess-engine
+  - pwd
   - export PATH=./node_modules/.bin:$PATH
   - echo $PATH
   - echo "****************************************************************************************"
