@@ -5,10 +5,8 @@ node_js:
 
 before_script:
   - echo "************************************ PRE BUILD SCRIPT **********************************"
-  - cd ./deep-chess-engine
-  - export PATH=$(pwd)/node_modules/.bin:$PATH
-  - echo $PATH
   - npm install -i mocha
+  - cd ./deep-chess-engine
   - echo "****************************************************************************************"
 
 script:
