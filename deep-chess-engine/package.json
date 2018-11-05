@@ -4,7 +4,7 @@
   "description": "Simple chess engine to play with deep reinforcement learning",
   "main": "game.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha"
+    "test": "mocha"
   },
   "keywords": [
     "chess",

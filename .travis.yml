@@ -3,16 +3,16 @@ language: node_js
 node_js:
   - "stable"
 
-cache:
-  directories:
-    - "node_modules"
-
 before_script:
   - echo "************************************ PRE BUILD SCRIPT **********************************"
   - cd ./deep-chess-engine
   - export PATH=$(pwd)/node_modules/.bin:$PATH
   - echo $PATH
+  - npm install -i mocha
   - echo "****************************************************************************************"
+
+script:
+  - npm run test
 
 after_script:
   - echo "************************************ POST BUILD SCRIPT *********************************"
