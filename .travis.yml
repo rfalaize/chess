@@ -3,9 +3,15 @@ language: node_js
 node_js:
   - "stable"
 
+cache:
+  directories:
+    - "node_modules"
+
 before_script:
   - echo "************************************ PRE BUILD SCRIPT **********************************"
   - cd ./deep-chess-engine
+  - export PATH=./node_modules/.bin:$PATH
+  - echo $PATH
   - echo "****************************************************************************************"
 
 after_script:
