@@ -12,9 +12,9 @@ call npm publish --access=public
 rem Update dependencies...
 
 cd ./../deep-chess-ui
-call npm install @rfalaize/deep-chess-engine
+call npm update @rfalaize/deep-chess-engine
 
 cd ./../deep-chess-server
-call npm install @rfalaize/deep-chess-engine
+call npm update @rfalaize/deep-chess-engine
 
 rem Done !
