@@ -1,0 +1,10 @@
+body,
+html {
+  height: 100%;
+  background-color: rgb(49, 46, 43);
+}
+
+.fill {
+  min-height: 100%;
+  height: 100%;
+}
