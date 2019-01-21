@@ -1,5 +1,6 @@
 connexion==2.2.0
 Flask==1.0.2
+Flask-Cors==3.0.7
 gunicorn==19.9.0
 gym==0.10.5
 numpy==1.14.5
