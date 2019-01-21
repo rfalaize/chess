@@ -69,11 +69,12 @@ class ChessComponent extends Component {
         promotion: "q"
       });
       if (m === null) return "snapback";
+
       // check if checkmate
       //...
+
       // post request
       const fen = engine.fen();
-      console.log(game);
       game.postGame(fen);
     }
 
@@ -92,16 +93,42 @@ class ChessComponent extends Component {
   postGame(fen) {
     // post move on server
     this.setState({ loading: true });
-
+    const game = this;
     var input = { fen: fen };
     console.log("Post input=", input);
+
+    var engine_url = "";
+    engine_url =
+      "https://deep-chess-229318.appspot.com/api/chess/engines/randomEngine";
+    //engine_url = "http://localhost:5000/api/chess/engines/randomEngine";
+
     axios
-      .post("http://localhost:5000/api/chess/engines/randomEngine", input)
+      .post(engine_url, input)
       .then(function(response) {
         console.log(response);
+        const data = response["data"];
+        const status = data["status"];
+
+        if (status !== "success") {
+          alert("Engine error while calculating move:", data["message"]);
+        } else {
+          const move = data["move"];
+          const from = move.slice(0, 2);
+          const target = move.slice(-2);
+          const m = game.engine.move({
+            from: from,
+            to: target,
+            promotion: "q"
+          });
+          //console.log("done", m);
+        }
+        game.updateBoard();
+        game.setState({ loading: false });
       })
       .catch(function(error) {
         console.log(error);
+        alert(error);
+        this.setState({ loading: false });
       });
   }
 }
