@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/rfalaize/deep-chess.svg?branch=master)](https://travis-ci.org/rfalaize/deep-chess)
-[![npm](https://img.shields.io/npm/v/@rfalaize/deep-chess-engine.svg)](https://github.com/rfalaize/deep-chess)
 
 # Deep Chess
 
