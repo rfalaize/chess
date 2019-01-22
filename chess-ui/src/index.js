@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { Route, BrowserRouter, Switch } from "react-router-dom";
 import "./index.css";
 import LoginComponent from "./components/login";
-import ChessComponent from "./components/chess";
+import GameComponent from "./components/chess";
 
 class App extends Component {
   state = {};
@@ -15,7 +15,7 @@ class App extends Component {
           <Switch>
             <Route path="/" component={LoginComponent} exact />
             <Route path="/login" component={LoginComponent} />
-            <Route path="/chess" component={ChessComponent} />
+            <Route path="/chess" component={GameComponent} />
           </Switch>
         </div>
       </BrowserRouter>

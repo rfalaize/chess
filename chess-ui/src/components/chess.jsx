@@ -5,13 +5,15 @@ import axios from "axios";
 
 const { Chess, ChessBoard } = window;
 
-class ChessComponent extends Component {
+class GameComponent extends Component {
   constructor() {
     super();
     this.state = {};
+    this.state.engine = null;
+    this.state.board = null;
     this.state.loading = false;
-    this.engine = new Chess();
-    this.board = null;
+    this.state.game_over = false;
+    this.state.message = "";
   }
 
   render() {
@@ -38,9 +40,8 @@ class ChessComponent extends Component {
   }
 
   initializeBoard(color = "white") {
-    const game = this;
-    const engine = this.engine;
-
+    var game = this;
+    var engine = new Chess();
     const config = {
       draggable: true,
       pieceTheme: "https://s3-us-west-2.amazonaws.com/chessimg/{piece}.png",
@@ -51,12 +52,15 @@ class ChessComponent extends Component {
     };
 
     // create board
-    this.board = ChessBoard("game-board", config);
-    this.board.orientation(color);
-    this.updateBoard();
-    return this.board;
+    var board = ChessBoard("game-board", config);
+    board.orientation(color);
 
-    // callbacks
+    game.setState({ board: board, engine: engine }, () => {
+      this.updateBoard();
+      return;
+    });
+
+    // add callbacks
     function onDragStart(source, piece) {
       if (engine.game_over()) return false;
       return true;
@@ -70,8 +74,8 @@ class ChessComponent extends Component {
       });
       if (m === null) return "snapback";
 
-      // check if checkmate
-      //...
+      // check if game ended
+      if (game.isGameEnded()) return;
 
       // post request
       const fen = engine.fen();
@@ -83,31 +87,30 @@ class ChessComponent extends Component {
     }
   }
 
-  updateBoard(context = { fen: "" }) {
-    this.engine.load(
-      context.fen || "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-    );
-    this.board.position(this.engine.fen());
+  updateBoard() {
+    const fen = this.state.engine.fen();
+    var board = this.state.board;
+    board.position(fen);
+    this.setState({ board: board });
   }
 
   postGame(fen) {
-    // post move on server
+    // send post request to chess engine server
     this.setState({ loading: true });
-    const game = this;
-    var input = { fen: fen };
-    console.log("Post input=", input);
 
-    var engine_url = "";
-    engine_url =
-      "https://deep-chess-229318.appspot.com/api/chess/engines/randomEngine";
-    //engine_url = "http://localhost:5000/api/chess/engines/randomEngine";
+    var game = this;
+    var input = { fen: fen };
+    var engine_server = "https://deep-chess-229318.appspot.com/";
+    //var engine_server = "http://localhost:5000/";
+    var engineName = "randomEngine";
+    var engine_url = engine_server + "api/chess/engines/" + engineName;
 
     axios
       .post(engine_url, input)
       .then(function(response) {
-        console.log(response);
         const data = response["data"];
         const status = data["status"];
+        console.log(data);
 
         if (status !== "success") {
           alert("Engine error while calculating move:", data["message"]);
@@ -115,15 +118,16 @@ class ChessComponent extends Component {
           const move = data["move"];
           const from = move.slice(0, 2);
           const target = move.slice(-2);
-          const m = game.engine.move({
+          game.state.engine.move({
             from: from,
             to: target,
             promotion: "q"
           });
-          //console.log("done", m);
         }
         game.updateBoard();
         game.setState({ loading: false });
+        // check if game ended
+        if (game.isGameEnded()) return;
       })
       .catch(function(error) {
         console.log(error);
@@ -131,6 +135,35 @@ class ChessComponent extends Component {
         this.setState({ loading: false });
       });
   }
+
+  isGameEnded() {
+    const engine = this.state.engine;
+    if (engine.in_stalemate()) {
+      this.setState({ game_over: true });
+      this.setState({ message: "Draw by stalemate!" });
+      return true;
+    } else if (engine.in_threefold_repetition()) {
+      this.setState({ game_over: true });
+      this.setState({ message: "Draw by threefold repetition!" });
+      return true;
+    } else if (engine.in_draw()) {
+      this.setState({ game_over: true });
+      this.setState({ message: "Draw!" });
+      return true;
+    } else if (engine.game_over()) {
+      var turn = engine.turn();
+      if (turn === "B") {
+        turn = "Black";
+      } else {
+        turn = "White";
+      }
+      this.setState({ game_over: true });
+      this.setState({ message: turn + " wins!" });
+      return true;
+    }
+
+    return false;
+  }
 }
 
-export default ChessComponent;
+export default GameComponent;
