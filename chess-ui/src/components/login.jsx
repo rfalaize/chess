@@ -5,20 +5,19 @@ class LoginComponent extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      inputLogin: "",
-      inputPassword: ""
+      name: "player",
+      color: "white",
+      algo: "random"
     };
   }
 
   handleClick = () => {
-    console.log("clicked:", this.state);
-    this.props.history.push("/chess");
+    if (!this.validateForm()) return;
+    this.props.history.push({ pathname: "/chess", state: this.state });
   };
 
   validateForm() {
-    return (
-      this.state.inputLogin.length > 0 && this.state.inputPassword.length > 0
-    );
+    return this.state.name.length > 0;
   }
 
   handleChange = event => {
@@ -33,14 +32,16 @@ class LoginComponent extends Component {
         <div className="absolute-center is-responsive mx-auto">
           <div className="card card-signin">
             <div className="card-body">
-              <h4 className="card-title text-center">Login</h4>
+              <h4 className="card-title text-center">Game settings</h4>
               <form className="form-signin">
                 <div className="form-label-group">
+                  <p className="form-label-dark-text">Player</p>
                   <input
-                    type="email"
-                    id="inputLogin"
+                    type="text"
+                    id="name"
                     className="form-control"
-                    placeholder="Email address"
+                    placeholder="Enter your name"
+                    value={this.state.name}
                     onChange={this.handleChange}
                     required
                     autoFocus
@@ -48,28 +49,29 @@ class LoginComponent extends Component {
                 </div>
 
                 <div className="form-label-group">
-                  <input
-                    type="password"
-                    id="inputPassword"
+                  <select
+                    id="color"
                     className="form-control"
-                    placeholder="Password"
+                    value={this.state.color}
                     onChange={this.handleChange}
-                    required
-                  />
+                  >
+                    <option>white</option>
+                    <option>black</option>
+                  </select>
                 </div>
 
-                <div className="custom-control custom-checkbox mb-3">
-                  <input
-                    type="checkbox"
-                    className="custom-control-input"
-                    id="customCheck1"
-                  />
-                  <label
-                    className="custom-control-label"
-                    htmlFor="customCheck1"
+                <div className="form-label-group">
+                  <p className="form-label-dark-text">Opponent A.I. version</p>
+                  <select
+                    id="algo"
+                    className="form-control"
+                    value={this.state.algo}
+                    onChange={this.handleChange}
                   >
-                    Remember password
-                  </label>
+                    <option>random</option>
+                    <option>alphabeta-v1</option>
+                    <option>dqn-v1</option>
+                  </select>
                 </div>
 
                 <button
@@ -77,7 +79,7 @@ class LoginComponent extends Component {
                   type="submit"
                   onClick={this.handleClick}
                 >
-                  Sign in
+                  Play
                 </button>
               </form>
             </div>

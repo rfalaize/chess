@@ -6,9 +6,15 @@ import axios from "axios";
 const { Chess, ChessBoard } = window;
 
 class GameComponent extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+
     this.state = {};
+    //attributes passed via props
+    this.state.playername = this.props.location.state.name;
+    this.state.playercolor = this.props.location.state.color;
+    this.state.algoname = this.props.location.state.algo;
+
     this.state.engine = null;
     this.state.board = null;
     this.state.loading = false;
@@ -20,8 +26,14 @@ class GameComponent extends Component {
     return (
       <div className="container-fluid col-sm-4">
         <hr />
+
+        <span>{this.state.algoname}</span>
+
+        {/* board */}
         <div id="game-board" />
-        <hr />
+
+        <span>{this.state.playername}</span>
+
         {this.state.message !== "" && (
           <div>
             <p>{this.state.message}</p>
@@ -42,10 +54,15 @@ class GameComponent extends Component {
   }
 
   componentDidMount() {
-    this.initializeBoard();
+    this.initializeBoard(() => {
+      if (this.state.playercolor === "white") return;
+      // if player is black, start playing
+      const fen = this.state.engine.fen();
+      this.postGame(fen);
+    });
   }
 
-  initializeBoard(color = "white") {
+  initializeBoard(callback) {
     var game = this;
     var engine = new Chess();
     const config = {
@@ -59,14 +76,14 @@ class GameComponent extends Component {
 
     // create board
     var board = ChessBoard("game-board", config);
-    board.orientation(color);
+    board.orientation(this.state.playercolor);
 
     game.setState({ board: board, engine: engine }, () => {
-      this.updateBoard();
+      this.updateBoard(callback);
       return;
     });
 
-    // add callbacks
+    // events
     function onDragStart(source, piece) {
       if (engine.game_over()) return false;
       return true;
@@ -93,11 +110,11 @@ class GameComponent extends Component {
     }
   }
 
-  updateBoard() {
+  updateBoard(callback) {
     const fen = this.state.engine.fen();
     var board = this.state.board;
     board.position(fen);
-    this.setState({ board: board });
+    this.setState({ board: board }, callback);
   }
 
   postGame(fen) {
@@ -158,13 +175,14 @@ class GameComponent extends Component {
       return true;
     } else if (engine.game_over()) {
       var turn = engine.turn();
+      var winner = "";
       if (turn === "B") {
-        turn = "Black";
+        winner = "White";
       } else {
-        turn = "White";
+        winner = "Black";
       }
       this.setState({ game_over: true });
-      this.setState({ message: turn + " wins!" });
+      this.setState({ message: winner + " wins!" });
       return true;
     }
 

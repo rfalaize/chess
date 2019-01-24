@@ -53,6 +53,10 @@
   vertical-align: middle;
 }
 
+.form-label-dark-text {
+  color: rgb(48, 48, 48);
+}
+
 .absolute-center {
   margin: auto;
   position: absolute;
