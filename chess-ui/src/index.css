@@ -2,6 +2,7 @@ body,
 html {
   height: 100%;
   background-color: rgb(49, 46, 43);
+  color: whitesmoke;
 }
 
 .fill {

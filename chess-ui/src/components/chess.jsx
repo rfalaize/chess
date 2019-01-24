@@ -22,6 +22,12 @@ class GameComponent extends Component {
         <hr />
         <div id="game-board" />
         <hr />
+        {this.state.message !== "" && (
+          <div>
+            <p>{this.state.message}</p>
+          </div>
+        )}
+        <hr />
         <div className="sweet-loading">
           <PacmanLoader
             sizeUnit={"px"}
