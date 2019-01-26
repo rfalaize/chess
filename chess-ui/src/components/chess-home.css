@@ -1,0 +1,77 @@
+.bg {
+  /* The image used */
+  background-image: url("./../assets/img/chess-background.jpg");
+
+  /* Full height */
+  height: 100%;
+
+  /* Center and scale the image nicely */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.card-signin {
+  border: 0;
+  border-radius: 1rem;
+  background-color: rgb(255, 255, 255);
+  opacity: 0.7;
+}
+
+.card-signin .card-title {
+  margin-bottom: 2rem;
+  font-weight: 300;
+  font-size: 1.5rem;
+  color: black;
+  font: bold;
+}
+
+.card-signin .card-body {
+  padding: 2rem;
+}
+
+.form-signin {
+  width: 100%;
+}
+
+.form-signin .btn {
+  font-size: 80%;
+  border-radius: 5rem;
+  letter-spacing: 0.1rem;
+  font-weight: bold;
+  padding: 1rem;
+  transition: all 0.2s;
+}
+
+.form-label-group {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.form-label-group input {
+  border-radius: 2rem;
+  vertical-align: middle;
+}
+
+.form-label-dark-text {
+  color: rgb(48, 48, 48);
+}
+
+.absolute-center {
+  margin: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+.absolute-center.is-responsive {
+  width: 50%;
+  height: 50%;
+  min-height: 400px;
+  max-height: 410px;
+  min-width: 400px;
+  max-width: 500px;
+  padding: 40px;
+}

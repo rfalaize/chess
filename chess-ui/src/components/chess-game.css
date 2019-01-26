@@ -1,0 +1,17 @@
+span {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: normal;
+}
+
+.history {
+  color: grey;
+}
+
+.chess-game-bg {
+  background-image: url("./../assets/img/matrix.jpg");
+  height: 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
