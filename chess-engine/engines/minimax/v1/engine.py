@@ -9,6 +9,16 @@ class Engine(CoreEngine):
 
     def Step(self):
         # function to be implemented by children
+        #...
+
+
+
+
+
+
+
+
+        
         move = random.choice(list(self.board.legal_moves))
         self.board.push(move)
         return move, self.board
