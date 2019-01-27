@@ -69,8 +69,8 @@ class ChessHomeComponent extends Component {
                     onChange={this.handleChange}
                   >
                     <option>random</option>
-                    <option>minimax-v1</option>
-                    {/*<option>dqn-v1</option>*/}
+                    <option>minimax.v1</option>
+                    <option>dqn.v1</option>
                   </select>
                 </div>
 
