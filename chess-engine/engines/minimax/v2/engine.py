@@ -3,8 +3,9 @@ from ...core import CoreEngine
 class Engine(CoreEngine):
 
     def __init__(self):
-        CoreEngine.__init__(self, 'minimax.v1')
+        CoreEngine.__init__(self, 'minimax.v2')
 
+        # Constants
         self.MAX_SCORE = 999999
 
         # *************************************************
@@ -82,13 +83,20 @@ class Engine(CoreEngine):
         self.SCORES['B']['QUEEN'] = self.MirrorScore(self.SCORES['W']['QUEEN'])
         self.SCORES['B']['KING'] = self.MirrorScore(self.SCORES['W']['KING'])
 
+        # variable to monitor training
+        self.nodes_count = 0
+
         return
 
     def Step(self):
         # function to be implemented by children
-        stats = { 'moves_evaluated': 0, 'max_depth': 2 }
-        score, move, stats = self.Minimax(self.board, depth=0, max_depth=stats['max_depth'], isMaximizer=self.board.turn, stats=stats)
+        self.nodes_count = 0
+        stats = { 'moves_evaluated': 0, 'max_depth': 4}
+        score, move, stats = self.Minimax(self.board, depth=0, max_depth=stats['max_depth'],
+                                          alpha=(-1)/self.MAX_SCORE, beta=self.MAX_SCORE,
+                                          isMaximizer=self.board.turn, stats=stats)
         stats['predicted_score'] = score
+        stats['nodes_count'] = self.nodes_count
         print("result: move=", move, "; score=", score, "; stats=", stats)
         self.board.push(move)
         return move, self.board, stats
@@ -136,9 +144,11 @@ class Engine(CoreEngine):
 
         return score
 
-    def Minimax(self, board, depth=0, max_depth=1, isMaximizer=True, stats = {}):
+    def Minimax(self, board, depth=0, max_depth=1, alpha=-1000000, beta=1000000, isMaximizer=True, stats = {}):
+        self.nodes_count +=1
+
         # when reaching a leaf node, return its evaluation
-        if depth>=max_depth or board.is_game_over():
+        if (depth>=max_depth) or (board.is_game_over()):
             stats['moves_evaluated'] += 1
             return self.Evaluate(board), None, stats
 
@@ -147,24 +157,37 @@ class Engine(CoreEngine):
 
         if isMaximizer:
             # player is maximizer
-            best_score = -999999
+            best_score = (-1)*self.MAX_SCORE
             for move in board.legal_moves:
                 board.push(move)
-                score, _, stats = self.Minimax(board, depth+1, max_depth, not isMaximizer, stats)
+                score, _, stats = self.Minimax(board, depth+1, max_depth, alpha, beta, False, stats)
                 board.pop()
                 if score > best_score:
                     best_score = score
                     best_move = move
+
+                alpha = max(alpha, best_score)
+                if (alpha >= beta):
+                    # no need to continue as the minimizer will pick the lower value (beta) somewhere else in the tree
+                    # so this branch will be discarded.
+                    # print('maximizer pruned node at depth {}: alpha ({}) >= beta ({})'.format(depth, alpha, beta))
+                    break;
         else:
             # player is minimizer
-            best_score = +999999
+            best_score = self.MAX_SCORE
             for move in board.legal_moves:
                 board.push(move)
-                score, _, stats = self.Minimax(board, depth+1, max_depth, not isMaximizer, stats)
+                score, _, stats = self.Minimax(board, depth+1, max_depth, alpha, beta, True, stats)
                 board.pop()
                 if score < best_score:
                     best_score = score
                     best_move = move
+
+                beta = min(beta, best_score)
+                if (alpha >= beta):
+                    # no need to continue as maximizer will pick the higher value (alpha) somewhere else in the tree
+                    # print('minimizer pruned node at depth {}: alpha ({}) >= beta ({})'.format(depth, alpha, beta))
+                    break;
 
         # print("depth=", depth, "/", max_depth, "; best_move=", best_move, "; best_score=", best_score)
         return best_score, best_move, stats

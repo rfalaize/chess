@@ -15,3 +15,7 @@ span {
   background-repeat: no-repeat;
   background-size: cover;
 }
+
+.chess-board-width {
+  width: 100%;
+}

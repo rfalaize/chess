@@ -36,7 +36,7 @@ class CoreEngine:
 
             # search next move using the specified 'Compute' function
             logging.info("Step... engine=" + self.engineName)
-            move, board = self.Step()
+            move, board, stats = self.Step()
             endTime = datetime.now()
             elapsedTime = (endTime - startTime).total_seconds()
             logging.info("Step took " + str(elapsedTime) + 's for engine ' + self.engineName)
@@ -45,15 +45,20 @@ class CoreEngine:
             response['status'] = 'success'
             response['move'] = str(move)
             response['board'] = board.fen()
+            response['input'] = decoded_fen
             response['isCheckMate'] = board.is_checkmate()
 
         except Exception as e:
+            endTime = datetime.now()
+            elapsedTime = (endTime - startTime).total_seconds()
             response['status'] = 'error'
             response['message'] = str(e)
+            stats = {}
+            logging.error(e)
 
 
-        stats = { 'startTime': startTime, 'endTime': endTime, 'elapsedTime': elapsedTime}
-        response['stats'] = stats
+        core_stats = { 'startTime': startTime, 'endTime': endTime, 'elapsedTime': elapsedTime}
+        response['stats'] = {**stats, **core_stats} # join 2 dictionaries
         logging.info("Request from " + str(headers) +"; response=" + str(response))
 
         return make_response(jsonify(response), 201)

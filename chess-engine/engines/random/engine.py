@@ -15,7 +15,7 @@ class Engine(CoreEngine):
         # function to be implemented by children
         move = random.choice(list(self.board.legal_moves))
         self.board.push(move)
-        return move, self.board
+        return move, self.board, {}
 
 
 # request handler
