@@ -14,6 +14,16 @@ class ChessGameComponent extends Component {
     this.state = {};
     //attributes passed via props
     this.state.playername = this.props.location.state.name;
+    if (
+      this.state.playername
+        .toUpperCase()
+        .replace(" ", "")
+        .startsWith("LAMOR")
+    ) {
+      setTimeout(function() {
+        alert("No coaching!");
+      }, 3000);
+    }
     this.state.playercolor = this.props.location.state.color;
     this.state.algoname = this.props.location.state.algo;
 
@@ -95,7 +105,7 @@ class ChessGameComponent extends Component {
           <div className="chess-game-bg">
             <div className="container-fluid col-sm-12 col-md-9 col-lg-4">
               {/* algo name */}
-              <span>{"A.I engine: " + this.state.algoname}</span>
+              <span>{"A.I engine: lafal." + this.state.algoname}</span>
 
               {/* board */}
               <div id="game-board" style={{ width: "100%" }} />
@@ -213,8 +223,8 @@ class ChessGameComponent extends Component {
 
     var game = this;
     var input = { fen: fen };
-    //var engine_server = "https://deep-chess-229318.appspot.com/";
-    var engine_server = "http://localhost:5000/";
+    var engine_server = "https://deep-chess-229318.appspot.com/";
+    //var engine_server = "http://localhost:5000/";
     var engine_url = engine_server + "api/chess/engines/" + this.state.algoname;
     console.log("Posting game to " + engine_url + "... input=", fen);
 

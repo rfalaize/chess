@@ -18,7 +18,7 @@ class ChessHomeComponent extends Component {
   };
 
   validateForm() {
-    return this.state.name.length > 0 && this.state.password === "nocoaching!";
+    return this.state.name.length > 0 && this.state.password === "nocoaching";
   }
 
   handleChange = event => {

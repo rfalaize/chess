@@ -2,8 +2,7 @@
 ::npm run build
 
 rem Deploying on gcloud...
-::gcloud app deploy --project=deep-chess-ui
-gsutil cp ./build gs://rhome-ai
+gsutil -m cp -r ./build/* gs://www.rhome.ai/
 
 rem Done!
 pause
