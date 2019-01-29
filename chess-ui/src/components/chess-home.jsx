@@ -13,7 +13,7 @@ class ChessHomeComponent extends Component {
   }
 
   handleClick = () => {
-    if (!this.validateForm()) return;
+    if (process.env.NODE_ENV === "production" && !this.validateForm()) return;
     this.props.history.push({ pathname: "/chess/game", state: this.state });
   };
 

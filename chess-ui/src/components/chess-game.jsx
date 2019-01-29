@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "./chess-game.css";
-import { BeatLoader } from "react-spinners";
+// import { BeatLoader } from "react-spinners";
 import axios from "axios";
 import "./home.css";
 import { Line } from "react-chartjs-2";
@@ -34,85 +34,21 @@ class ChessGameComponent extends Component {
     this.state.message = "";
 
     // stats history
-    this.state.enginestats = {};
-    this.state.enginestats.history = {
-      moves_played: [],
-      moves_evaluated_count: [],
-      predicted_scores: [],
-      time_elapsed: []
-    };
+    this.state.enginestats = { elapsed_time: [] };
   }
 
   render() {
-    const data = {
-      labels: Array.from(
-        new Array(this.state.enginestats.history.moves_evaluated_count.length),
-        (val, index) => index + 1
-      ),
-      datasets: [
-        {
-          label: "Evaluated moves",
-          data: this.state.enginestats.history.moves_evaluated_count,
-          fill: false,
-          backgroundColor: "#2ecc71", // green
-          borderColor: "#2ecc71",
-          yAxisID: "y-axis-1"
-        },
-        {
-          label: "Predicted score",
-          data: this.state.enginestats.history.predicted_scores,
-          fill: false,
-          backgroundColor: "#FEA47F",
-          borderColor: "#FEA47F",
-          yAxisID: "y-axis-2"
-        }
-      ]
-    };
-
-    const options = {
-      responsive: true,
-      title: {
-        display: true,
-        text: "Engine stats"
-      },
-      scales: {
-        yAxes: [
-          {
-            type: "linear",
-            display: true,
-            position: "left",
-            id: "y-axis-1",
-            ticks: {
-              fontColor: "#2ecc71"
-            }
-          },
-          {
-            type: "linear",
-            display: true,
-            position: "right",
-            id: "y-axis-2",
-            ticks: {
-              fontColor: "#FEA47F"
-            }
-          }
-        ]
-      }
-    };
-
     return (
       <section className="p-0">
         <div className="container-fluid p-0">
           <div className="chess-game-bg">
             <div className="container-fluid col-sm-12 col-md-9 col-lg-4">
               {/* algo name */}
-              <span>{"A.I engine: lafal." + this.state.algoname}</span>
-
+              <span>{"A.I engine: rhome@" + this.state.algoname}</span>
               {/* board */}
               <div id="game-board" style={{ width: "100%" }} />
-
               {/* player name */}
               <span>{"Player: " + this.state.playername}</span>
-
               {/* status */}
               {this.state.message !== "" && (
                 <div>
@@ -121,34 +57,81 @@ class ChessGameComponent extends Component {
                   <br />
                 </div>
               )}
-
               {/* history */}
               <div>
                 <hr />
                 <span className="history">{this.renderHistory()}</span>
                 <br />
               </div>
-
               {/* loading animation */}
-              <div className="sweet-loading">
+              {/*<div className="sweet-loading">
                 <BeatLoader
                   sizeUnit={"px"}
                   size={10}
                   margin={"2px"}
                   color={"#50E3C2"}
                   loading={this.state.loading}
-                />
-              </div>
-
+              />
+              </div>*/}
               {/* Stats */}
               <div>
-                <section>
-                  <Line data={data} options={options} />
-                </section>
+                {Object.keys(this.state.enginestats).map((key, index) =>
+                  this.generateGraph(key, index)
+                )}
               </div>
             </div>
           </div>
         </div>
+      </section>
+    );
+  }
+
+  generateGraph(statname, index = 0) {
+    // from https://flatuicolors.com/palette/defo
+    const colors = [
+      "#2ecc71",
+      "#f39c12",
+      "#3498db",
+      "#a29bfe",
+      "#9b59b6",
+      "#f1c40f",
+      "#e74c3c",
+      "#9b59b6"
+    ];
+
+    var color = colors[index % colors.length];
+    var data = {
+      labels: Array.from(
+        new Array(this.state.enginestats.elapsed_time.length),
+        (val, index) => index + 1
+      ),
+      datasets: [
+        {
+          label: statname,
+          data: this.state.enginestats[statname],
+          fill: false,
+          backgroundColor: color,
+          borderColor: color
+        }
+      ]
+    };
+    var options = {
+      responsive: true,
+      yAxes: [
+        {
+          type: "linear",
+          display: true,
+          position: "left",
+          ticks: {
+            fontColor: color
+          }
+        }
+      ]
+    };
+
+    return (
+      <section key={"graph-" + statname}>
+        <Line data={data} options={options} />
       </section>
     );
   }
@@ -223,8 +206,12 @@ class ChessGameComponent extends Component {
 
     var game = this;
     var input = { fen: fen };
-    var engine_server = "https://deep-chess-229318.appspot.com/";
-    //var engine_server = "http://localhost:5000/";
+    var engine_server = "";
+    if (process.env.NODE_ENV === "production") {
+      engine_server = "https://deep-chess-229318.appspot.com/";
+    } else {
+      engine_server = "http://localhost:5000/";
+    }
     var engine_url = engine_server + "api/chess/engines/" + this.state.algoname;
     console.log("Posting game to " + engine_url + "... input=", fen);
 
@@ -247,19 +234,15 @@ class ChessGameComponent extends Component {
             promotion: "q"
           });
           // update engine stats
-          var stats = game.state.enginestats;
-          stats.history.moves_played.push(move);
-          if ("moves_evaluated" in data["stats"])
-            stats.history.moves_evaluated_count.push(
-              data["stats"]["moves_evaluated"]
-            );
-          if ("predicted_score" in data["stats"])
-            stats.history.predicted_scores.push(
-              data["stats"]["predicted_score"]
-            );
-          if ("elapsedTime" in data["stats"])
-            stats.history.time_elapsed.push(data["stats"]["elapsedTime"]);
-          game.setState({ enginestats: stats });
+          let statshistory = game.state.enginestats;
+          let statsmove = data["stats"];
+          for (let statname in statsmove) {
+            if (!(statname in statshistory)) {
+              statshistory[statname] = [];
+            }
+            statshistory[statname].push(statsmove[statname]);
+          }
+          game.setState({ enginestats: statshistory });
         }
         game.updateBoard();
         game.setState({ loading: false });
