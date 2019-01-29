@@ -44,7 +44,7 @@ class ChessGameComponent extends Component {
           <div className="chess-game-bg">
             <div className="container-fluid col-sm-12 col-md-9 col-lg-4">
               {/* algo name */}
-              <span>{"A.I engine: rhome@" + this.state.algoname}</span>
+              <span>{"rhome@" + this.state.algoname + " - AI engine"}</span>
               {/* board */}
               <div id="game-board" style={{ width: "100%" }} />
               {/* player name */}
