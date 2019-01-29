@@ -34,12 +34,9 @@ class CoreEngine:
             decoded_fen = self.DecodeFen(fen)
             self.board = chess.Board(decoded_fen)
 
-            # search next move using the specified 'Compute' function
-            logging.info("Step... engine=" + self.engineName)
+            # search next move using the specified 'Step' function
+            logging.info("Server received request... engine=" + self.engineName + "; headers=" + str(headers))
             move, board, stats = self.Step()
-            endTime = datetime.now()
-            elapsedTime = (endTime - startTime).total_seconds()
-            logging.info("Step took " + str(elapsedTime) + 's for engine ' + self.engineName)
 
             # return response
             response['status'] = 'success'
@@ -49,17 +46,15 @@ class CoreEngine:
             response['isCheckMate'] = board.is_checkmate()
 
         except Exception as e:
-            endTime = datetime.now()
-            elapsedTime = (endTime - startTime).total_seconds()
             response['status'] = 'error'
             response['message'] = str(e)
             stats = {}
-            logging.error(e)
+            logging.error("Error during Step function:", e)
 
-
-        core_stats = { 'startTime': startTime, 'endTime': endTime, 'elapsedTime': elapsedTime}
+        endTime = datetime.now()
+        core_stats = {'elapsed_time': (endTime - startTime).total_seconds()}
         response['stats'] = {**stats, **core_stats} # join 2 dictionaries
-        logging.info("Request from " + str(headers) +"; response=" + str(response))
+        logging.info("Server response=" + str(response))
 
         return make_response(jsonify(response), 201)
 

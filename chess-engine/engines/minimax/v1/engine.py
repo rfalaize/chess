@@ -86,7 +86,7 @@ class Engine(CoreEngine):
 
     def Step(self):
         # function to be implemented by children
-        stats = { 'moves_evaluated': 0, 'max_depth': 2 }
+        stats = { 'nodes_evaluated': 0, 'max_depth': 2 }
         score, move, stats = self.Minimax(self.board, depth=0, max_depth=stats['max_depth'], isMaximizer=self.board.turn, stats=stats)
         stats['predicted_score'] = score
         print("result: move=", move, "; score=", score, "; stats=", stats)
@@ -139,7 +139,7 @@ class Engine(CoreEngine):
     def Minimax(self, board, depth=0, max_depth=1, isMaximizer=True, stats = {}):
         # when reaching a leaf node, return its evaluation
         if depth>=max_depth or board.is_game_over():
-            stats['moves_evaluated'] += 1
+            stats['nodes_evaluated'] += 1
             return self.Evaluate(board), None, stats
 
         # evaluate next moves up to a certain depth

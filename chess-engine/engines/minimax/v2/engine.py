@@ -85,19 +85,19 @@ class Engine(CoreEngine):
 
         # variable to monitor training
         self.nodes_count = 0
-
+        self.nodes_evaluated = 0
         return
 
     def Step(self):
         # function to be implemented by children
         self.nodes_count = 0
-        stats = { 'moves_evaluated': 0, 'max_depth': 4}
-        score, move, stats = self.Minimax(self.board, depth=0, max_depth=stats['max_depth'],
+        score, move = self.Minimax(self.board, depth=0, max_depth=4,
                                           alpha=(-1)/self.MAX_SCORE, beta=self.MAX_SCORE,
-                                          isMaximizer=self.board.turn, stats=stats)
-        stats['predicted_score'] = score
+                                          isMaximizer=self.board.turn)
+        stats = {}
         stats['nodes_count'] = self.nodes_count
-        print("result: move=", move, "; score=", score, "; stats=", stats)
+        stats['nodes_evaluated'] = self.nodes_evaluated
+        stats['predicted_score'] = score
         self.board.push(move)
         return move, self.board, stats
 
@@ -144,13 +144,13 @@ class Engine(CoreEngine):
 
         return score
 
-    def Minimax(self, board, depth=0, max_depth=1, alpha=-1000000, beta=1000000, isMaximizer=True, stats = {}):
+    def Minimax(self, board, depth=0, max_depth=1, alpha=-1000000, beta=1000000, isMaximizer=True):
         self.nodes_count +=1
 
         # when reaching a leaf node, return its evaluation
         if (depth>=max_depth) or (board.is_game_over()):
-            stats['moves_evaluated'] += 1
-            return self.Evaluate(board), None, stats
+            self.nodes_evaluated += 1
+            return self.Evaluate(board), None
 
         # evaluate next moves up to a certain depth
         best_move = None
@@ -160,7 +160,7 @@ class Engine(CoreEngine):
             best_score = (-1)*self.MAX_SCORE
             for move in board.legal_moves:
                 board.push(move)
-                score, _, stats = self.Minimax(board, depth+1, max_depth, alpha, beta, False, stats)
+                score, _ = self.Minimax(board, depth+1, max_depth, alpha, beta, False)
                 board.pop()
                 if score > best_score:
                     best_score = score
@@ -177,7 +177,7 @@ class Engine(CoreEngine):
             best_score = self.MAX_SCORE
             for move in board.legal_moves:
                 board.push(move)
-                score, _, stats = self.Minimax(board, depth+1, max_depth, alpha, beta, True, stats)
+                score, _ = self.Minimax(board, depth+1, max_depth, alpha, beta, True)
                 board.pop()
                 if score < best_score:
                     best_score = score
@@ -189,8 +189,7 @@ class Engine(CoreEngine):
                     # print('minimizer pruned node at depth {}: alpha ({}) >= beta ({})'.format(depth, alpha, beta))
                     break;
 
-        # print("depth=", depth, "/", max_depth, "; best_move=", best_move, "; best_score=", best_score)
-        return best_score, best_move, stats
+        return best_score, best_move
 
     def MirrorScore(self, scores):
         return scores[56:64] \
