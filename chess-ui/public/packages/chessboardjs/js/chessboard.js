@@ -1731,7 +1731,8 @@ var buildSquare = function(color, size, id) {
       //------------------------------------------------------------------------------
 
       function isTouchDevice() {
-        return "ontouchstart" in document.documentElement;
+        //return "ontouchstart" in document.documentElement;
+        return false;
       }
 
       // reference: http://www.quirksmode.org/js/detect.html
