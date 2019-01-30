@@ -42,9 +42,9 @@ paths:
                 type: "string"
               timestamp:
                 type: "string"
-  /chess/engines/minimax.v1:
+  /chess/engines/minimax.v2:
     post:
-      operationId: "engines.minimax.v1.engine.handleRequest"
+      operationId: "engines.minimax.v2.engine.handleRequest"
       tags:
         - "Chess"
       summary: "Chess engine response"
@@ -72,9 +72,9 @@ paths:
                 type: "string"
               timestamp:
                 type: "string"
-  /chess/engines/minimax.v2:
+  /chess/engines/minimax.v3:
     post:
-      operationId: "engines.minimax.v2.engine.handleRequest"
+      operationId: "engines.minimax.v3.engine.handleRequest"
       tags:
         - "Chess"
       summary: "Chess engine response"

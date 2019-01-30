@@ -53,6 +53,8 @@ class CoreEngine:
 
         endTime = datetime.now()
         core_stats = {'elapsed_time': (endTime - startTime).total_seconds()}
+        if 'nodes_evaluated' in stats and stats['nodes_evaluated'] > 0:
+            core_stats['ms_per_move'] = 1000 * core_stats['elapsed_time'] / stats['nodes_evaluated']
         response['stats'] = {**stats, **core_stats} # join 2 dictionaries
         logging.info("Server response=" + str(response))
 

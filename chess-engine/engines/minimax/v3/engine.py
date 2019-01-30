@@ -1,9 +1,10 @@
 from ...core import CoreEngine
+import operator
 
 class Engine(CoreEngine):
 
     def __init__(self):
-        CoreEngine.__init__(self, 'minimax.v2')
+        CoreEngine.__init__(self, 'minimax.v3')
 
         # Constants
         self.MAX_SCORE = 999999
@@ -83,6 +84,9 @@ class Engine(CoreEngine):
         self.SCORES['B']['QUEEN'] = self.MirrorScore(self.SCORES['W']['QUEEN'])
         self.SCORES['B']['KING'] = self.MirrorScore(self.SCORES['W']['KING'])
 
+        # piece values
+        self.piece_scores = { 1: 100, 2: 320, 3: 330, 4:500, 5:900, 6:20000 }
+
         # variable to monitor training
         self.nodes_count = 0
         self.nodes_evaluated = 0
@@ -91,7 +95,7 @@ class Engine(CoreEngine):
     def Step(self):
         # function to be implemented by children
         self.nodes_count = 0
-        score, move = self.Minimax(self.board, depth=0, max_depth=4,
+        score, move = self.Minimax(self.board, depth=0, max_depth=6,
                                           alpha=(-1)/self.MAX_SCORE, beta=self.MAX_SCORE,
                                           isMaximizer=self.board.turn)
         stats = {}
@@ -132,17 +136,17 @@ class Engine(CoreEngine):
             if piece == None:
                 continue
             if piece.piece_type == 1:
-                piece_score = 100 + pawn_score[square]
+                piece_score = self.piece_scores[1] + pawn_score[square]
             elif piece.piece_type == 2:
-                piece_score = 320 + knight_score[square]
+                piece_score = self.piece_scores[2] + knight_score[square]
             elif piece.piece_type == 3:
-                piece_score = 330 + bishop_score[square]
+                piece_score = self.piece_scores[3] + bishop_score[square]
             elif piece.piece_type == 4:
-                piece_score = 500 + rook_score[square]
+                piece_score = self.piece_scores[4] + rook_score[square]
             elif piece.piece_type == 5:
-                piece_score = 900 + queen_score[square]
+                piece_score = self.piece_scores[5] + queen_score[square]
             elif piece.piece_type == 6:
-                piece_score = 20000 + king_score[square]
+                piece_score = self.piece_scores[6] + king_score[square]
 
             if piece.color:
                 # white
@@ -164,10 +168,26 @@ class Engine(CoreEngine):
         # evaluate next moves up to a certain depth
         best_move = None
 
+        # sort moves so that the ones that capture pieces are analyzed first
+        # ******************************************************************
+        legal_moves_values = {}
+        for move in board.legal_moves:
+            piece = board.piece_at(move.to_square)
+            if piece != None:
+                # use value of the captured opponent piece
+                legal_moves_values[move] = self.piece_scores[piece.piece_type]
+            else:
+                # use value of the piece to move
+                # legal_moves_values[move] = self.piece_scores[board.piece_at(move.from_square).piece_type] / 1000
+                legal_moves_values[move] = 0
+        # capture pieces with highest values first
+        legal_moves_sorted = [x[0] for x in sorted(legal_moves_values.items(), key=operator.itemgetter(1), reverse=True)]
+
         if isMaximizer:
             # player is maximizer
             best_score = (-1)*self.MAX_SCORE
-            for move in board.legal_moves:
+
+            for move in legal_moves_sorted:
                 board.push(move)
                 score, _ = self.Minimax(board, depth+1, max_depth, alpha, beta, False)
                 board.pop()
@@ -184,7 +204,7 @@ class Engine(CoreEngine):
         else:
             # player is minimizer
             best_score = self.MAX_SCORE
-            for move in board.legal_moves:
+            for move in legal_moves_sorted:
                 board.push(move)
                 score, _ = self.Minimax(board, depth+1, max_depth, alpha, beta, True)
                 board.pop()
