@@ -69,8 +69,8 @@ class ChessHomeComponent extends Component {
                     value={this.state.algo}
                     onChange={this.handleChange}
                   >
+                    <option>minimax.v3</option>
                     <option>minimax.v2</option>
-                    <option>minimax.v1</option>
                     <option>random</option>
                   </select>
                 </div>
