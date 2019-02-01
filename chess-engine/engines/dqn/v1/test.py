@@ -16,7 +16,7 @@ b.is_checkmate()
 import numpy as np
 layers = {}
 
-colors = [0, 1]                     # 0=white, 1=black
+colors = [0, 1]                     # 0=black, 1=white
 pieces = [1, 2, 3, 4, 5, 6]         # 1=pawn, 2=knight, 3=bishop, 4=rook, 5=queen, 6=king
 mask_types = [0, 1]                 # 0=moves, 1=squares
 
@@ -27,29 +27,31 @@ for color in colors:
             # flattened into a 1D array
             layers[(color, piece, mask_type)] = np.zeros(64)
 
-# fill inputs
+# fill current position
 for i in range(64):
     piece = b.piece_at(i)
-    if i == None:
+    if piece == None:
         continue
-    color = piece.color
-    layers[(color, piece, 0)][i] = 1.0
-    
-    
+    layers[(int(piece.color), piece.piece_type, 0)][i] = 1.0
+
+# fill legal moves
+for move in b.legal_moves:
+    from_square = move.from_square
+    piece = b.piece_at(from_square)
+    layers[(int(piece.color), piece.piece_type, 1)][move.to_square] += 1.0
 
 # flatten layers
 inputs = np.array(list(layers.values())).ravel()
 
 # additional features
-inputs = np.append(inputs, b.turn)
-inputs = np.append(inputs, b.is_check())
-inputs = np.append(inputs, b.is_checkmate())
-inputs = np.append(inputs, b.is_stalemate())
-inputs = np.append(inputs, b.is_insufficient_material())
-inputs = np.append(inputs, b.has_legal_en_passant())
-inputs = np.append(inputs, b.has_kingside_castling_rights(b.turn))
-inputs = np.append(inputs, b.has_queenside_castling_rights(b.turn))
-inputs = np.append(inputs, b.is_game_over())
+inputs = np.append(inputs, float(b.turn))
+inputs = np.append(inputs, float(b.is_check()))
+inputs = np.append(inputs, float(b.is_checkmate()))
+inputs = np.append(inputs, float(b.is_stalemate()))
+inputs = np.append(inputs, float(b.is_insufficient_material()))
+inputs = np.append(inputs, float(b.has_kingside_castling_rights(b.turn)))
+inputs = np.append(inputs, float(b.has_queenside_castling_rights(b.turn)))
+inputs = np.append(inputs, float(b.is_game_over()))
 
 
 '''
