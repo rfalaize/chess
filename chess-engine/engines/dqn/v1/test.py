@@ -12,7 +12,7 @@ b.push_san("Nc6")
 
 b.is_checkmate()
 
-# encode the state in numeric inputs to be passed to a neural network
+#%% encode the state in numeric inputs to be passed to a neural network
 import numpy as np
 layers = {}
 
@@ -54,11 +54,6 @@ inputs = np.append(inputs, float(b.has_queenside_castling_rights(b.turn)))
 inputs = np.append(inputs, float(b.is_game_over()))
 
 
-'''
-b.attacks(8)
-b.is_capture(move)
-b.pieces
-b.piece_at(0)
-b.attacks(0)
-b.is_pinned(0, 0)
-'''
+#%% create neural network
+
+import keras
