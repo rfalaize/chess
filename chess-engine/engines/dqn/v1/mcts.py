@@ -46,42 +46,106 @@ Starting from the root node n(0), we repeat the following steps until time is ex
 
 '''
 
-from math import sqrt, log, inf
+import datetime
+from math import sqrt, log
+import random
 
+# ********************************************************************
+# Node of the game tree
+# ********************************************************************
+class Node:
+    def __init__(self, game):
+        # current board position of the board
+        self.game = game
+        # statistics to keep for training
+        self.visits = 0
+        self.score = 0
+
+    def descendants(self):
+        # to do: return descendants of that node,
+        # i.e positions after each possible legal move
+        return
+
+
+# ********************************************************************
+# Monte carlo tree search implementation
+# ********************************************************************
 class MCTS:
 
-    def __init__(self):
+    def __init__(self, max_search_time=10, C=1.0):
         # hyper parameters
-        self.max_time = 10
-        self.C = 1.0
+        self.max_search_time = max_search_time  # in seconds
+        self.C = C
         # statistics kept while traversing the tree
         self.nodes_scores = {}
         self.nodes_visits = {}
         # list of nodes representing the tree path followed
         self.path = []
 
-    def Selection(self, root_node):
+    def search(self, root_node):
+        st = datetime.datetime.now()
+        simulations_count = 0
         self.path = []
-        current_node = root_node
 
-        while current_node is not None:
-            f = sqrt(2 * log(self.nodes_visits[current_node]))
-            best_ucb = -inf
-            best_node = None
-            for descendant in current_node.descendants():
-                descendant_visits = self.nodes_visits[descendant]
-                if descendant_visits == 0:
-                    # node has never been visited before
-                    ucb = 0
-                else:
-                    ucb = self.nodes_scores[descendant] / descendant_visits \
-                        + self.C * f / sqrt(descendant_visits)
-                if ucb > best_ucb:
-                    best_ucb = ucb
-                    best_node = descendant
+        while True:
+            # 1) Selection
+            # ********************************************************************
+            current_node = root_node
+            while current_node is not None:
+                f = sqrt(2 * log(self.nodes_visits[current_node]))
+                best_ucb = 0
+                best_node = None
+                for descendant in current_node.descendants():
+                    descendant_visits = self.nodes_visits[descendant]
+                    if descendant_visits > 0:
+                        ucb = self.nodes_scores[descendant] / descendant_visits \
+                            + self.C * f / sqrt(descendant_visits)
+                    if ucb > best_ucb:
+                        best_ucb = ucb
+                        best_node = descendant
 
-            # append node to the path
-            current_node = best_node
+                if best_node is None:
+                    break
+
+                # append node to the path
+                current_node = best_node
+                self.path += [current_node]
+
+            # 2) Expansion
+            # ********************************************************************
+            current_node = Node()
             self.path += [current_node]
-        return
-    
+
+            # 3) Simulation
+            # ********************************************************************
+            while not current_node.is_leaf():
+                current_node = random.choice(current_node.descendants())
+
+            # 4) Backup
+            # ********************************************************************
+            score = current_node.score
+            for visited_node in self.path:
+                visited_node.visits += 1
+                visited_node.score += score
+
+            # check if there is time left
+            simulations_count += 1
+            if simulations_count % 10 == 0:
+                et = datetime.datetime.now()
+                if (et - st).total_seconds() > self.max_search_time:
+                    break
+
+        # 5) Move selection
+        # ********************************************************************
+        max_visits = -1
+        next_node = None
+        for descendant in root_node.descendants():
+            if descendant.visits > max_visits:
+                max_visits = descendant.visits
+                next_node = descendant
+        return next_node
+
+
+
+
+
