@@ -806,11 +806,11 @@ var buildSquare = function(color, size, id) {
 
         // on complete
         var complete = function() {
-          // add the "real" piece to the destination square
-          destSquareEl.append(buildPiece(piece));
-
           // remove the animated piece
           animatedPieceEl.remove();
+
+          // add the "real" piece to the destination square
+          destSquareEl.append(buildPiece(piece));
 
           // run complete function
           if (typeof completeFn === "function") {
@@ -1520,15 +1520,15 @@ var buildSquare = function(color, size, id) {
           // *****************************************************
           var destination = source;
           var newPosition = deepCopy(CURRENT_POSITION);
+
           if (
             validSquare(CLICKED_PIECE_SOURCE) === true &&
             validMove(CLICKED_PIECE_LOCATION) === true
           ) {
             delete newPosition[CLICKED_PIECE_SOURCE];
             newPosition[destination] = CLICKED_PIECE;
+            dropClickedPieceOnSquare(destination);
           }
-          var oldPosition = deepCopy(CURRENT_POSITION);
-          dropClickedPieceOnSquare(destination);
 
           // reset start
           CLICKED_PIECE = undefined;

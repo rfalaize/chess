@@ -42,7 +42,7 @@ class ChessGameComponent extends Component {
       <section className="p-0">
         <div className="container-fluid p-0">
           <div className="chess-game-bg">
-            <div className="container-fluid col-sm-12 col-md-9 col-lg-4">
+            <div className="container-fluid col-sm-12 col-md-9 col-lg-5">
               {/* algo name */}
               <span>{"rhome@" + this.state.algoname + " - AI engine"}</span>
               {/* board */}
@@ -138,6 +138,18 @@ class ChessGameComponent extends Component {
 
   componentDidMount() {
     this.initializeBoard(() => {
+      // get state from cache if available
+      var cachedKey = "deep-chess-state";
+      if (localStorage.hasOwnProperty(cachedKey)) {
+        // get state from localStorage
+        try {
+          var cachedState = localStorage.getItem("deep-chess-state");
+          this.setState(cachedState);
+          console.log("State restored successfully.");
+        } catch (e) {
+          console.log("Error while fetching cache:", e);
+        }
+      }
       if (this.state.playercolor === "white") return;
       // if player is black, start playing
       const fen = this.state.engine.fen();
@@ -197,6 +209,10 @@ class ChessGameComponent extends Component {
     const fen = this.state.engine.fen();
     var board = this.state.board;
     board.position(fen);
+    // cache
+    localStorage.setItem("deep-chess-state", this.state);
+    console.log("State cached");
+
     this.setState({ board: board }, callback);
   }
 
@@ -291,6 +307,10 @@ class ChessGameComponent extends Component {
     if (this.state.engine === null) return "";
     var history = "History: " + this.state.engine.history().join(", ");
     return history;
+  }
+
+  setStateWithCache(state) {
+    localStorage.setItem("chess-app", this.state);
   }
 }
 

@@ -8,7 +8,7 @@ class ChessHomeComponent extends Component {
       name: "visitor",
       password: "",
       color: "white",
-      algo: "minimax.v2"
+      algo: "mcts.v1"
     };
   }
 
@@ -69,8 +69,10 @@ class ChessHomeComponent extends Component {
                     value={this.state.algo}
                     onChange={this.handleChange}
                   >
+                    <option>mcts.v1</option>
                     <option>minimax.v3</option>
                     <option>minimax.v2</option>
+                    <option>minimax.v1</option>
                     <option>random</option>
                   </select>
                 </div>
