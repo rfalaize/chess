@@ -60,7 +60,7 @@ class Engine(CoreEngine):
         self.tree_search_branch = []    # visited nodes during one round of tree search
 
         # tree and rollout policies
-        self.policies = None
+        self.policies = Policies()
 
         # metrics to keep traversing the tree
         self.stats = {}
@@ -70,18 +70,15 @@ class Engine(CoreEngine):
     def Step(self):
         # function to be implemented by children
         root_node = Node(self.board)
-        # fix seed to reproduce results
         move, stats = self.MCTS(root_node,
-                                max_tree_searches=0,
-                                max_search_time=30,
-                                max_simulation_depth=1,
-                                random_seed=None)
+                                max_tree_searches=500,
+                                max_search_time=0,
+                                max_simulation_depth=1)
         self.board.push(move)
         return move, self.board, stats
 
-    def MCTS(self, root_node, max_tree_searches=0, max_search_time=30, max_simulation_depth=1, random_seed=None):
+    def MCTS(self, root_node, max_tree_searches=0, max_search_time=30, max_simulation_depth=1):
         st = datetime.datetime.now()
-        self.policies = Policies(root_node.board.turn, random_seed)
         self.root_node_player = root_node.board.turn
         self.max_tree_searches = max_tree_searches
         self.max_search_time = max_search_time
@@ -102,7 +99,7 @@ class Engine(CoreEngine):
             current_node = root_node                    # start each search from the root node
             self.tree_search_branch = [current_node]    # initialize list of visited nodes
 
-            if tree_search_count == 1 or tree_search_count % 500 == 0:
+            if tree_search_count == 1 or tree_search_count % 100 == 0:
                 checkpoint_stats = {}
                 for descendant in current_node.get_descendants():
                     checkpoint_stats[str(descendant.board.peek())] = descendant.visits
@@ -113,32 +110,36 @@ class Engine(CoreEngine):
 
             # 1) Selection
             # ********************************************************************
-            while True:
-                if current_node.is_leaf():
-                    # leaf found
-                    break
-                # get next node using the tree policy
-                next_node = self.policies.SelectionPolicy(current_node, epsilon=0.1, score_type='observed')
-                self.tree_search_branch += [next_node]
-                current_node = next_node
-                if next_node.visits == 0:
-                    # 2) Expansion
-                    # ************************************************************
-                    break
+            if current_node.visits > 0:
+                while True:
 
-            # if str(current_node.board.peek()) == "e6f5":
-            #    print("STOP")
+                    if current_node.is_leaf():
+                        # leaf found
+                        break
+
+                    # get next node using the tree policy
+                    next_node = self.policies.TreePolicyUCBGreedy(current_node, epsilon=0.0)
+                    self.tree_search_branch += [next_node]
+                    current_node = next_node
+
+                    if next_node.visits == 0:
+                        # 2) Expansion
+                        # ********************************************************************
+                        break
 
             # 3) Simulation
             # ********************************************************************
             # start simulation from the unexplored node (i.e. the current_node), and create a simulation branch
             # from there. This branch is not stored as we are only interested about the end result, i.e the leaf.
             simulated_branch_depth = 0
+
             simulated_node = current_node.copy()
             while not simulated_node.is_leaf():
                 # select next node in a random manner (light play out)
                 # following the probability distribution provided by the roll-out policy
-                simulated_node = self.policies.SelectionPolicy(simulated_node, epsilon=0.0, score_type='policy')
+                descendants, probabilities = self.policies.RolloutPolicy(simulated_node)
+                simulated_node = np.random.choice(descendants, p=probabilities)
+
                 simulated_branch_depth += 1
                 if simulated_branch_depth >= self.max_simulation_depth:
                     # stop simulation after max depth
@@ -146,13 +147,16 @@ class Engine(CoreEngine):
 
             # 4) Back propagation
             # ********************************************************************
-            # evaluate the simulated node for the root player
-            simulated_score = self.policies.WeightedScore(simulated_node)
+            # evaluate the new node with respect to the root_player
+            score = self.policies.WeightedScore(simulated_node)
+            if not self.root_node_player:
+                # score for black is opposite
+                score = (-1) * score
 
             # update all nodes visited during tree search
             for visited_node in self.tree_search_branch:
                 visited_node.visits += 1
-                visited_node.score += simulated_score
+                visited_node.score += score
 
             # check if there is time left
             # ********************************************************************
@@ -167,7 +171,6 @@ class Engine(CoreEngine):
         # 5) Move selection
         # ####################################################################
         max_visits = -1
-        # max_score = -np.inf
         next_node = None
 
         print("******************** End search. Next move selection *******************")
@@ -201,13 +204,10 @@ class Engine(CoreEngine):
 # ********************************************************************
 class Policies:
 
-    def __init__(self, root_player_turn, random_seed=None):
-        # store root player
-        self.root_player_turn = root_player_turn
+    def __init__(self):
 
         # hyper-parameters
         self.C = 1.0  # can be increase to favor exploration
-        self.random_seed = random_seed
 
         # piece values
         self.piece_scores = {1: 100, 2: 320, 3: 330, 4: 500, 5: 900, 6: 1800}
@@ -331,13 +331,16 @@ class Policies:
     # Scoring functions (>0 is white leads, <0 if black leads)
     # ********************************************************************
     def ObservedScore(self, node):
-        if node.visits == 0:
-            return 0
-        return node.score / node.visits
+        # score of a position without knowledge of the game
+        if node.board.is_checkmate():
+            if node.board.turn:
+                return 2000
+            else:
+                return -2000
+        return 0
 
-    def PolicyScore(self, node):
+    def EstimatedScore(self, node):
         # score of a position estimated using handcrafted knowledge
-        # score has to be higher if root player is leading
         score = 0
         for square in range(64):
             piece = node.board.piece_at(square)
@@ -348,62 +351,16 @@ class Policies:
                 score += piece_score    # white
             else:
                 score -= piece_score    # black
-
-        if not self.root_player_turn:
-            # score for black is opposite
-            score *= (-1)
-
         return score
 
     def WeightedScore(self, node, eta=0.5):
         # eta is a parameter to control the incorporation of game knowledge
-        observed_score = self.ObservedScore(node)
-        policy_score = self.PolicyScore(node)
-        return eta * observed_score + (1-eta) * policy_score
-
-    # Selection policy
-    # ********************************************************************
-    def SelectionPolicy(self, node, epsilon=0.0, score_type='weighted'):
-        descendants = node.get_descendants()
-
-        np.random.seed(self.random_seed)
-        if epsilon > 0 and np.random.random() < epsilon:
-            # choose a random node with probability epsilon
-            np.random.seed(self.random_seed)
-            return np.random.choice(descendants)
-
-        # probabilities are the estimated scores of each child node, transformed by a soft-max function.
-        scores = []
-        scaling = 25
-        for descendant in descendants:
-            # score that root player leads
-            if score_type == 'weighted':
-                score = self.WeightedScore(descendant)
-            elif score_type == 'observed':
-                score = self.ObservedScore(descendant)
-            elif score_type == 'policy':
-                score = self.PolicyScore(descendant)
-            else:
-                raise ValueError('score_type=', score_type, ' not supported.')
-
-            # scale so that it gives nice probabilities with soft-max
-            score /= scaling
-            if not (node.board.turn == self.root_player_turn):
-                # if it is the opponent's turn, he is more likely to pick that move that minimizes
-                # the root player's score. To reflect this, we flip the score so that
-                # low score => high probability to be picked
-                score = (-1) * score
-            scores.append(score)
-
-        # soft-max activation
-        exp_scores = np.exp(np.array(scores))
-        probabilities = exp_scores / exp_scores.sum()
-        # [x for x in zip([str(x.board.peek()) for x in descendants], [x*scaling for x in scores], probabilities)]
-        np.random.seed(self.random_seed)
-        next_node = np.random.choice(descendants, p=probabilities)
-        return next_node
+        naive_score = self.ObservedScore(node)
+        estimated_score = self.EstimatedScore(node)
+        return eta * naive_score + (1-eta) * estimated_score
 
     # Tree policy
+    # from a node, returns the next node to visit
     # ********************************************************************
     def TreePolicyUCBGreedy(self, node, epsilon=0.5):
         # tree policy using upper confidence bound
@@ -460,6 +417,30 @@ class Policies:
                 next_node = descendant
 
         return next_node
+
+    # Roll-out policy
+    # from a node, returns the probability distribution over possible moves
+    # ********************************************************************
+    def RolloutPolicy(self, node):
+        # probabilities are the estimated scores of each child node, transformed by a soft-max function.
+        descendants = []
+        scores = []
+        for descendant in node.get_descendants():
+            descendants.append(descendant)
+            score = self.WeightedScore(descendant)
+            # scale by 100 so that it gives nice probabilities with soft-max
+            score /= 100
+            if not node.board.turn:
+                # roll-out policy has to return probabilities for the player of this node.
+                # in particular if it's the opponent's turn, it is likely to pick the move
+                # that will minimize our score.
+                score = (-1) * score
+            scores.append(score)
+        # soft-max activation
+        scores = np.exp(np.array(scores))
+        probabilities = scores / scores.sum()
+        return descendants, probabilities
+
 
 
 # request handler
