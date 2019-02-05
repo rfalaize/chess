@@ -19,3 +19,14 @@ span {
 .chess-board-width {
   width: 100%;
 }
+
+.btn-group-actions {
+  display: block;
+  position: relative;
+  text-align: center;
+  width: 100%;
+}
+
+.btn-action {
+  width: 33%;
+}

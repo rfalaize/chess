@@ -80,7 +80,7 @@ class HomeComponent extends Component {
         </header>
 
         {/* Interests */}
-        <section id="services">
+        <section id="interests">
           <div className="container">
             <div className="row">
               <div className="col-lg-12 text-center">
@@ -91,7 +91,27 @@ class HomeComponent extends Component {
           </div>
           <div className="container">
             <div className="row">
-              <div className="col-lg-4 col-md-6 text-center">
+              <div className="col-lg-3 col-md-6 text-center">
+                <div className="service-box mt-5 mx-auto">
+                  <i
+                    className="fas fa-4x fa-code-branch text-primary mb-3 sr-icon-1"
+                    data-sr-id="0"
+                    style={{
+                      visibility: "visible",
+                      opacity: "1",
+                      transform:
+                        "matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)",
+                      transition:
+                        "opacity 0.6s cubic-bezier(0.5, 0, 0, 1) 0.2s, transform 0.6s cubic-bezier(0.5, 0, 0, 1) 0.2s"
+                    }}
+                  />
+                  <h3 className="mb-3">Artificial Intelligence</h3>
+                  <p className="text-muted mb-0">
+                    Supervised, Unsupervised and Reinforcement Learning.
+                  </p>
+                </div>
+              </div>
+              <div className="col-lg-3 col-md-6 text-center">
                 <div className="service-box mt-5 mx-auto">
                   <i
                     className="fas fa-4x fa-infinity text-primary mb-3 sr-icon-1"
@@ -105,13 +125,14 @@ class HomeComponent extends Component {
                         "opacity 0.6s cubic-bezier(0.5, 0, 0, 1) 0.2s, transform 0.6s cubic-bezier(0.5, 0, 0, 1) 0.2s"
                     }}
                   />
-                  <h3 className="mb-3">Mathematics</h3>
+                  <h3 className="mb-3">Optimal Control</h3>
                   <p className="text-muted mb-0">
-                    Algebra, calculus, statistics.
+                    Constrained optimization, Mixed Integer and Dynamic
+                    Programming.
                   </p>
                 </div>
               </div>
-              <div className="col-lg-4 col-md-6 text-center">
+              <div className="col-lg-3 col-md-6 text-center">
                 <div className="service-box mt-5 mx-auto">
                   <i
                     className="fas fa-4x fa-code text-primary mb-3 sr-icon-3"
@@ -131,7 +152,7 @@ class HomeComponent extends Component {
                   </p>
                 </div>
               </div>
-              <div className="col-lg-4 col-md-6 text-center">
+              <div className="col-lg-3 col-md-6 text-center">
                 <div className="service-box mt-5 mx-auto">
                   <i
                     className="fas fa-4x fa-flask text-primary mb-3 sr-icon-2"

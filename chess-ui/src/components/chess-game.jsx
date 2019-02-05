@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "./chess-game.css";
-// import { BeatLoader } from "react-spinners";
+import { BeatLoader } from "react-spinners";
 import axios from "axios";
 import "./home.css";
 import { Line } from "react-chartjs-2";
@@ -57,22 +57,35 @@ class ChessGameComponent extends Component {
                   <br />
                 </div>
               )}
+              {/* buttons */}
+              <div className="row justify-content-center">
+                <div className="col-4" />
+                <div className="col-4">
+                  <div className="btn-group btn-group-actions">
+                    <label className="btn btn-dark btn-action">{"<"}</label>
+                    <label className="btn btn-dark btn-action">{">"}</label>
+                    <label className="btn btn-dark btn-action">{"+"}</label>
+                  </div>
+                </div>
+                <div className="col-4" />
+              </div>
               {/* history */}
-              <div>
-                <hr />
+              <div className="row" />
+              <div className="row">
                 <span className="history">{this.renderHistory()}</span>
-                <br />
               </div>
               {/* loading animation */}
-              {/*<div className="sweet-loading">
-                <BeatLoader
-                  sizeUnit={"px"}
-                  size={10}
-                  margin={"2px"}
-                  color={"#50E3C2"}
-                  loading={this.state.loading}
-              />
-              </div>*/}
+              {
+                <div className="sweet-loading">
+                  <BeatLoader
+                    sizeUnit={"px"}
+                    size={10}
+                    margin={"2px"}
+                    color={"#50E3C2"}
+                    loading={this.state.loading}
+                  />
+                </div>
+              }
               {/* Stats */}
               <div>
                 {Object.keys(this.state.enginestats).map((key, index) =>
@@ -139,7 +152,7 @@ class ChessGameComponent extends Component {
   componentDidMount() {
     this.initializeBoard(() => {
       // get state from cache if available
-      var cachedKey = "deep-chess-state";
+      /*var cachedKey = "deep-chess-state";
       if (localStorage.hasOwnProperty(cachedKey)) {
         // get state from localStorage
         try {
@@ -149,7 +162,7 @@ class ChessGameComponent extends Component {
         } catch (e) {
           console.log("Error while fetching cache:", e);
         }
-      }
+      }*/
       if (this.state.playercolor === "white") return;
       // if player is black, start playing
       const fen = this.state.engine.fen();
@@ -210,8 +223,8 @@ class ChessGameComponent extends Component {
     var board = this.state.board;
     board.position(fen);
     // cache
-    localStorage.setItem("deep-chess-state", this.state);
-    console.log("State cached");
+    /*localStorage.setItem("deep-chess-state", this.state);
+    console.log("State cached");*/
 
     this.setState({ board: board }, callback);
   }
@@ -305,7 +318,15 @@ class ChessGameComponent extends Component {
 
   renderHistory() {
     if (this.state.engine === null) return "";
-    var history = "History: " + this.state.engine.history().join(", ");
+    var history = (
+      <div>
+        <div>
+          <strong>History</strong>
+        </div>
+        <div>- pgn: {this.state.engine.pgn()}</div>
+        <div>- fen: {this.state.engine.fen()}</div>
+      </div>
+    );
     return history;
   }
 

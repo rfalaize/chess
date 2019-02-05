@@ -5,10 +5,10 @@ class ChessHomeComponent extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      name: "visitor",
-      password: "",
+      name: "player",
+      pd: "",
       color: "white",
-      algo: "mcts.v1"
+      algo: "minimax.v2"
     };
   }
 
@@ -18,7 +18,7 @@ class ChessHomeComponent extends Component {
   };
 
   validateForm() {
-    return this.state.name.length > 0 && this.state.password === "nocoaching";
+    return this.state.name.length > 0 && this.state.pd === "nocoaching";
   }
 
   handleChange = event => {
