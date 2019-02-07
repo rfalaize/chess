@@ -6,7 +6,7 @@ class ChessHomeComponent extends Component {
     super(props);
     this.state = {
       name: "player",
-      pd: "",
+      pwd: "",
       color: "white",
       algo: "minimax.v2"
     };
@@ -18,7 +18,7 @@ class ChessHomeComponent extends Component {
   };
 
   validateForm() {
-    return this.state.name.length > 0 && this.state.pd === "nocoaching";
+    return this.state.name.length > 0 && this.state.pwd === "nocoaching";
   }
 
   handleChange = event => {
@@ -80,7 +80,7 @@ class ChessHomeComponent extends Component {
                 <div className="form-label-group">
                   <input
                     type="password"
-                    id="password"
+                    id="pwd"
                     className="form-control"
                     placeholder="Chessroom password"
                     onChange={this.handleChange}
