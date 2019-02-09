@@ -17,7 +17,7 @@ class HomeComponent extends Component {
         >
           <div className="container">
             <a className="navbar-brand js-scroll-trigger" href="#page-top">
-              Rhome X
+              Rhome F.
             </a>
             <button
               className="navbar-toggler navbar-toggler-right"
