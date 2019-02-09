@@ -84,7 +84,7 @@ class Engine(CoreEngine):
         self.SCORES['B']['KING'] = self.MirrorScore(self.SCORES['W']['KING'])
 
         # piece values
-        self.piece_scores = { 1: 100, 2: 320, 3: 330, 4:500, 5:900, 6:20000 }
+        self.piece_scores = {1: 100, 2: 320, 3: 330, 4:500, 5:900, 6:2000}
 
         # variable to monitor training
         self.nodes_count = 0
@@ -95,7 +95,7 @@ class Engine(CoreEngine):
         # function to be implemented by children
         self.nodes_count = 0
         score, move = self.Minimax(self.board, depth=0, max_depth=6,
-                                          alpha=(-1)/self.MAX_SCORE, beta=self.MAX_SCORE,
+                                          alpha=-9999, beta=9999,
                                           isMaximizer=self.board.turn)
         stats = {}
         stats['nodes_count'] = self.nodes_count
@@ -109,13 +109,12 @@ class Engine(CoreEngine):
         # evaluation function
         if board.is_checkmate():
             if board.turn:
-                return self.MAX_SCORE
+                return -9999
             else:
-                return -self.MAX_SCORE
+                return 9999
         elif board.is_game_over():
             # if game ended without checkmate, then it's a draw
             return 0
-
 
         if board.turn:
             player = 'W'

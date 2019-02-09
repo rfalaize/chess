@@ -111,7 +111,7 @@ class Engine(CoreEngine):
         score = 0
         for square in range(64):
             piece = board.piece_at(square)
-            if piece == None:
+            if piece is None:
                 continue
             if piece.piece_type == 1:
                 piece_score = 100 + self.SCORES[player]['PAWN'][square]
@@ -137,7 +137,7 @@ class Engine(CoreEngine):
 
     def Minimax(self, board, depth=0, max_depth=1, isMaximizer=True, stats = {}):
         # when reaching a leaf node, return its evaluation
-        if depth>=max_depth or board.is_game_over():
+        if depth >= max_depth or board.is_game_over():
             stats['nodes_evaluated'] += 1
             return self.Evaluate(board), None, stats
 

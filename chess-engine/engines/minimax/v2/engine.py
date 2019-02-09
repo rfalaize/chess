@@ -90,8 +90,8 @@ class Engine(CoreEngine):
     def Step(self):
         # function to be implemented by children
         self.nodes_count = 0
-        score, move = self.Minimax(self.board, depth=0, max_depth=4,
-                                          alpha=(-1)/self.MAX_SCORE, beta=self.MAX_SCORE,
+        score, move = self.Minimax(self.board, depth=0, max_depth=2,
+                                          alpha=-9999, beta=9999,
                                           isMaximizer=self.board.turn)
         stats = {}
         stats['nodes_count'] = self.nodes_count
@@ -105,13 +105,12 @@ class Engine(CoreEngine):
         # evaluation function
         if board.is_checkmate():
             if board.turn:
-                return self.MAX_SCORE
+                return -9999
             else:
-                return -self.MAX_SCORE
+                return 9999
         elif board.is_game_over():
             # if game ended without checkmate, then it's a draw
             return 0
-
 
         if board.turn:
             player = 'W'
@@ -128,7 +127,7 @@ class Engine(CoreEngine):
         score = 0
         for square in range(64):
             piece = board.piece_at(square)
-            if piece == None:
+            if piece is None:
                 continue
             if piece.piece_type == 1:
                 piece_score = 100 + pawn_score[square]
@@ -141,7 +140,7 @@ class Engine(CoreEngine):
             elif piece.piece_type == 5:
                 piece_score = 900 + queen_score[square]
             elif piece.piece_type == 6:
-                piece_score = 20000 + king_score[square]
+                piece_score = 2000 + king_score[square]
 
             if piece.color:
                 # white
@@ -153,10 +152,10 @@ class Engine(CoreEngine):
         return score
 
     def Minimax(self, board, depth=0, max_depth=1, alpha=-1000000, beta=1000000, isMaximizer=True):
-        self.nodes_count +=1
+        self.nodes_count += 1
 
         # when reaching a leaf node, return its evaluation
-        if (depth>=max_depth) or (board.is_game_over()):
+        if (depth >= max_depth) or (board.is_game_over()):
             self.nodes_evaluated += 1
             return self.Evaluate(board), None
 
@@ -175,9 +174,9 @@ class Engine(CoreEngine):
                     best_move = move
 
                     alpha = max(alpha, best_score)
-                    if (alpha >= beta):
-                        # no need to continue as the minimizer will pick the lower value (beta) somewhere else in the tree
-                        # so this branch will be discarded.
+                    if alpha >= beta:
+                        # no need to continue as the minimizer will pick the lower value (beta)
+                        # somewhere else in the tree, so this branch will be discarded.
                         # print('maximizer pruned node at depth {}: alpha ({}) >= beta ({})'.format(depth, alpha, beta))
                         break;
         else:
@@ -192,7 +191,7 @@ class Engine(CoreEngine):
                     best_move = move
 
                     beta = min(beta, best_score)
-                    if (alpha >= beta):
+                    if alpha >= beta:
                         # no need to continue as maximizer will pick the higher value (alpha) somewhere else in the tree
                         # print('minimizer pruned node at depth {}: alpha ({}) >= beta ({})'.format(depth, alpha, beta))
                         break;
