@@ -22,7 +22,7 @@ class ChessGameComponent extends Component {
     ) {
       setTimeout(function() {
         alert("No coaching!");
-      }, 3000);
+      }, 2000);
     }
     this.state.playercolor = this.props.location.state.color;
     this.state.algoname = this.props.location.state.algo;
@@ -35,6 +35,9 @@ class ChessGameComponent extends Component {
 
     // stats history
     this.state.enginestats = { elapsed_time: [] };
+
+    // non-state
+    this.historynextmoves = [];
   }
 
   render() {
@@ -62,9 +65,24 @@ class ChessGameComponent extends Component {
                 <div className="col-4" />
                 <div className="col-4">
                   <div className="btn-group btn-group-actions">
-                    <label className="btn btn-dark btn-action">{"<"}</label>
-                    <label className="btn btn-dark btn-action">{">"}</label>
-                    <label className="btn btn-dark btn-action">{"+"}</label>
+                    <label
+                      className="btn btn-dark btn-action"
+                      onClick={this.onClickPreviousMove}
+                    >
+                      {"<"}
+                    </label>
+                    <label
+                      className="btn btn-dark btn-action"
+                      onClick={this.onClickNextMove}
+                    >
+                      {">"}
+                    </label>
+                    <label
+                      className="btn btn-dark btn-action"
+                      onClick={this.onClickPlay}
+                    >
+                      {"+"}
+                    </label>
                   </div>
                 </div>
                 <div className="col-4" />
@@ -333,6 +351,23 @@ class ChessGameComponent extends Component {
   setStateWithCache(state) {
     localStorage.setItem("chess-app", this.state);
   }
+
+  onClickPreviousMove = () => {
+    let nextmove = this.state.engine.undo();
+    if (nextmove == null) return;
+    this.historynextmoves.push(nextmove);
+    this.updateBoard();
+  };
+
+  onClickNextMove = () => {
+    if (this.historynextmoves.length === 0) return;
+    this.state.engine.move(this.historynextmoves.shift());
+    this.updateBoard();
+  };
+
+  onClickPlay = () => {
+    console.log("play!");
+  };
 }
 
 export default ChessGameComponent;
