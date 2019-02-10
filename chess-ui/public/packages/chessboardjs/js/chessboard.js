@@ -257,7 +257,6 @@
         DRAGGED_PIECE_SOURCE,
         DRAGGING_A_PIECE = false,
         CLICKED_PIECE,
-        CLICKED_PIECE_LOCATION,
         CLICKED_PIECE_SOURCE,
         SPARE_PIECE_ELS_IDS = {},
         SQUARE_ELS_IDS = {},
@@ -617,22 +616,6 @@
 
         return html;
       }
-
-      /*
-var buildSquare = function(color, size, id) {
-  var html = '<div class="' + CSS.square + ' ' + CSS[color] + '" ' +
-  'style="width: ' + size + 'px; height: ' + size + 'px" ' +
-  'id="' + id + '">';
-
-  if (cfg.showNotation === true) {
-
-  }
-
-  html += '</div>';
-
-  return html;
-};
-*/
 
       function buildBoard(orientation) {
         if (orientation !== "black") {
@@ -1165,7 +1148,8 @@ var buildSquare = function(color, size, id) {
       function removeSquareHighlights() {
         boardEl
           .find("." + CSS.square)
-          .removeClass(CSS.highlight1 + " " + CSS.highlight2);
+          .removeClass(CSS.highlight1)
+          .removeClass(CSS.highlight2);
       }
 
       function snapbackDraggedPiece() {
@@ -1231,7 +1215,7 @@ var buildSquare = function(color, size, id) {
       }
 
       function dropDraggedPieceOnSquare(square) {
-        //removeSquareHighlights();
+        removeSquareHighlights();
 
         // update position
         var newPosition = deepCopy(CURRENT_POSITION);
@@ -1268,11 +1252,7 @@ var buildSquare = function(color, size, id) {
       }
 
       function dropClickedPieceOnSquare(square) {
-        //removeSquareHighlights();
-
         // update position
-        var location = square;
-        var oldPosition = deepCopy(CURRENT_POSITION);
         var newPosition = deepCopy(CURRENT_POSITION);
         delete newPosition[CLICKED_PIECE_SOURCE];
         newPosition[square] = CLICKED_PIECE;
@@ -1340,17 +1320,17 @@ var buildSquare = function(color, size, id) {
           left: x - SQUARE_SIZE / 2,
           top: y - SQUARE_SIZE / 2
         });
-
-        if (source !== "spare") {
-          // highlight the source square and hide the piece
-          $("#" + SQUARE_ELS_IDS[source])
-            .addClass(CSS.highlight1)
-            .find("." + CSS.piece)
-            .css("display", "none");
-        }
       }
 
       function updateDraggedPiece(x, y) {
+        console.log(
+          "updateDraggedPiece",
+          DRAGGED_PIECE,
+          DRAGGED_PIECE_SOURCE,
+          DRAGGED_PIECE_LOCATION,
+          x,
+          y
+        );
         // put the dragged piece over the mouse cursor
         draggedPieceEl.css({
           left: x - SQUARE_SIZE / 2,
@@ -1361,20 +1341,10 @@ var buildSquare = function(color, size, id) {
         var location = isXYOnSquare(x, y);
 
         // do nothing if the location has not changed
-        if (location === DRAGGED_PIECE_LOCATION) return;
-
-        // remove highlight from previous square
-        if (validSquare(DRAGGED_PIECE_LOCATION) === true) {
-          $("#" + SQUARE_ELS_IDS[DRAGGED_PIECE_LOCATION]).removeClass(
-            CSS.highlight2
-          );
+        if (location === DRAGGED_PIECE_LOCATION) {
+          console.log("location=DRAGGED_PIECE_LOCATION => return");
+          return;
         }
-
-        // add highlight to new square
-        if (validSquare(location) === true) {
-          $("#" + SQUARE_ELS_IDS[location]).addClass(CSS.highlight2);
-        }
-
         // run onDragMove
         if (typeof cfg.onDragMove === "function") {
           cfg.onDragMove(
@@ -1470,81 +1440,72 @@ var buildSquare = function(color, size, id) {
         if (CLICKED_PIECE === null) {
           removeSquareHighlights();
         } else {
-          // move piece
-          var destination = source;
-          var newPosition = deepCopy(CURRENT_POSITION);
-          if (
-            validSquare(CLICKED_PIECE_SOURCE) === true &&
-            validMove(CLICKED_PIECE_LOCATION) === true
-          ) {
-            delete newPosition[CLICKED_PIECE_SOURCE];
-            newPosition[destination] = CLICKED_PIECE;
-          }
-          var oldPosition = deepCopy(CURRENT_POSITION);
-
-          // validate move
-          var result = cfg.onDrop(
-            CLICKED_PIECE_SOURCE,
-            destination,
-            CLICKED_PIECE,
-            newPosition,
-            oldPosition,
-            CURRENT_ORIENTATION
-          );
-
-          var action = "drop";
-          if (result === "snapback" || result === "trash") {
-            action = result;
-          }
-
-          if (action === "snapback") {
-            snapbackDraggedPiece();
-          } else if (action === "trash") {
-            //trashDraggedPiece();
-          } else if (action === "drop") {
-            dropClickedPieceOnSquare(destination);
-          }
-
-          // reset start
-          CLICKED_PIECE = undefined;
-          CLICKED_PIECE_SOURCE = "";
-          DRAGGED_PIECE_LOCATION = "";
-          removeSquareHighlights();
-          return;
+          moveClickedPiece(source);
         }
       }
 
       function onPieceClick(source, piece) {
         if (CLICKED_PIECE !== undefined) {
-          // move the previously selected piece
-          // *****************************************************
-          var destination = source;
-          var newPosition = deepCopy(CURRENT_POSITION);
-
-          if (
-            validSquare(CLICKED_PIECE_SOURCE) === true &&
-            validMove(CLICKED_PIECE_LOCATION) === true
-          ) {
-            delete newPosition[CLICKED_PIECE_SOURCE];
-            newPosition[destination] = CLICKED_PIECE;
-            dropClickedPieceOnSquare(destination);
+          if (CLICKED_PIECE === piece) {
+            // unselect piece
+            CLICKED_PIECE = undefined;
+            CLICKED_PIECE_SOURCE = "";
+            removeSquareHighlights();
+            return;
           }
 
-          // reset start
-          CLICKED_PIECE = undefined;
-          CLICKED_PIECE_SOURCE = "";
-          DRAGGED_PIECE_LOCATION = "";
-          removeSquareHighlights();
+          // move the previously selected piece
+          moveClickedPiece(source);
         } else {
-          // select the piece
-          // *****************************************************
+          // select new piece
           CLICKED_PIECE = piece;
           CLICKED_PIECE_SOURCE = source;
-          DRAGGED_PIECE_LOCATION = source;
 
           // highlight the source square and hide the piece
           $("#" + SQUARE_ELS_IDS[source]).addClass(CSS.highlight1);
         }
+      }
+
+      function moveClickedPiece(source) {
+        // move piece
+        var destination = source;
+        var newPosition = deepCopy(CURRENT_POSITION);
+        if (
+          validSquare(CLICKED_PIECE_SOURCE) === true &&
+          validMove(destination) === true
+        ) {
+          delete newPosition[CLICKED_PIECE_SOURCE];
+          newPosition[destination] = CLICKED_PIECE;
+        }
+        var oldPosition = deepCopy(CURRENT_POSITION);
+
+        // validate move
+        var result = cfg.onDrop(
+          CLICKED_PIECE_SOURCE,
+          destination,
+          CLICKED_PIECE,
+          newPosition,
+          oldPosition,
+          CURRENT_ORIENTATION
+        );
+
+        var action = "drop";
+        if (result === "snapback" || result === "trash") {
+          action = result;
+        }
+
+        if (action === "snapback") {
+          snapbackDraggedPiece();
+        } else if (action === "trash") {
+          //trashDraggedPiece();
+        } else if (action === "drop") {
+          dropClickedPieceOnSquare(destination);
+        }
+
+        // reset start
+        CLICKED_PIECE = undefined;
+        CLICKED_PIECE_SOURCE = "";
+        removeSquareHighlights();
       }
 
       //------------------------------------------------------------------------------
