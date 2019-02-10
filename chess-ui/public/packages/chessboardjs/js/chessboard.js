@@ -1323,14 +1323,6 @@
       }
 
       function updateDraggedPiece(x, y) {
-        console.log(
-          "updateDraggedPiece",
-          DRAGGED_PIECE,
-          DRAGGED_PIECE_SOURCE,
-          DRAGGED_PIECE_LOCATION,
-          x,
-          y
-        );
         // put the dragged piece over the mouse cursor
         draggedPieceEl.css({
           left: x - SQUARE_SIZE / 2,
@@ -1342,7 +1334,6 @@
 
         // do nothing if the location has not changed
         if (location === DRAGGED_PIECE_LOCATION) {
-          console.log("location=DRAGGED_PIECE_LOCATION => return");
           return;
         }
         // run onDragMove
