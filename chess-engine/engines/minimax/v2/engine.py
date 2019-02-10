@@ -90,7 +90,7 @@ class Engine(CoreEngine):
     def Step(self):
         # function to be implemented by children
         self.nodes_count = 0
-        score, move = self.Minimax(self.board, depth=0, max_depth=2,
+        score, move = self.Minimax(self.board, depth=0, max_depth=4,
                                           alpha=-9999, beta=9999,
                                           isMaximizer=self.board.turn)
         stats = {}
