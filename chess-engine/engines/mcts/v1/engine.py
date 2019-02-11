@@ -195,6 +195,8 @@ class Engine(CoreEngine):
         print("next move", next_move)
         return next_move, self.stats
 
+    def Copy(self):
+        return Engine()
 
 # ********************************************************************
 # Policy

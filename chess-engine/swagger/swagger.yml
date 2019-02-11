@@ -14,7 +14,7 @@ basePath: "/api"
 paths:
   /chess/engines/random:
     post:
-      operationId: "engines.random.engine.handleRequest"
+      operationId: "engines.rnd.engine.handleRequest"
       tags:
         - "Chess"
       summary: "Chess engine response"

@@ -178,7 +178,8 @@ class Engine(CoreEngine):
                + scores[8:16] \
                + scores[0:8]
 
-
+    def Copy(self):
+        return Engine()
 
 # request handler
 def handleRequest(context):

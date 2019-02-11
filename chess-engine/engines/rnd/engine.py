@@ -11,6 +11,9 @@ class Engine(CoreEngine):
         CoreEngine.__init__(self, 'random')
         return
 
+    def Copy(self):
+        return Engine()
+
     def Step(self):
         # function to be implemented by children
         move = random.choice(list(self.board.legal_moves))

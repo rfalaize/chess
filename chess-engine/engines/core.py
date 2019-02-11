@@ -10,7 +10,7 @@ import chess
 import logging
 import connexion
 from datetime import datetime
-from flask import make_response, abort, jsonify
+from flask import make_response, jsonify
 
 class CoreEngine:
 
@@ -64,4 +64,8 @@ class CoreEngine:
         # function to be implemented by children
         # move = ''
         # return move, self.board <-- return format
+        raise NotImplementedError
+
+    def Copy(self):
+        # function to be implemented by children
         raise NotImplementedError

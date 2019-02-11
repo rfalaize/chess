@@ -4,6 +4,7 @@ import { BeatLoader } from "react-spinners";
 import axios from "axios";
 import "./home.css";
 import { Line } from "react-chartjs-2";
+import "./../assets/startbootstrap-creative-gh-pages/vendor/fontawesome-free/css/all.min.css";
 
 const { Chess, ChessBoard } = window;
 
@@ -69,19 +70,19 @@ class ChessGameComponent extends Component {
                       className="btn btn-dark btn-action"
                       onClick={this.onClickPreviousMove}
                     >
-                      {"<"}
+                      <i className="fas fa-chevron-left" />
                     </label>
                     <label
                       className="btn btn-dark btn-action"
                       onClick={this.onClickNextMove}
                     >
-                      {">"}
+                      <i className="fas fa-chevron-right" />
                     </label>
                     <label
                       className="btn btn-dark btn-action"
-                      onClick={this.onClickPlay}
+                      onClick={this.onClickImport}
                     >
-                      {"+"}
+                      <i className="fas fa-upload" />
                     </label>
                   </div>
                 </div>
@@ -365,8 +366,12 @@ class ChessGameComponent extends Component {
     this.updateBoard();
   };
 
-  onClickPlay = () => {
+  onClickImport = () => {
     console.log("play!");
+  };
+
+  onClickRestart = () => {
+    console.log("restart!");
   };
 }
 
