@@ -1,20 +1,18 @@
-from engines.arena import Arena, PlayTournament
+from engines.arena import PlayGame, PlayGames
 from engines.rnd.engine import Engine as EngineRandom
 from engines.minimax.v2.engine import Engine as EngineMinimaxV2
 
-
-def test_PlayGame():
-    print("********************* PIT *************************")
+def _PlayGame():
     player1 = EngineRandom()
     player2 = EngineMinimaxV2()
-    arena = Arena(player1, player2)
-    arena.playGame(verbose=True)
-    print("********************* END *************************")
+    PlayGame(player1, player2, verbose=True)
 
-def test_PlayTournament():
+def test_PlayGames():
     player1 = EngineRandom()
     player2 = EngineMinimaxV2()
-    PlayTournament(player1, player2, num_games=8)
+    PlayGames(player1, player2, num_games=8)
 
 if __name__ == '__main__':
-    test_PlayTournament()
+    print("********************* PIT *************************")
+    test_PlayGames()
+    print("********************* END *************************")
