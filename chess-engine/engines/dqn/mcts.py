@@ -81,40 +81,43 @@ class MCTS:
 
         if s not in self.Ps:
             # leaf node
-            encodedBoard = self.boardEncoder.Encode(board)
+            encodedBoard = self.boardEncoder.EncodeBoard(board)
             self.Ps[s], v = self.nnet.forward(encodedBoard)
-            valids = board.legal_moves
+            self.Ps[s] = self.Ps[s].data.numpy()
+            v = v.data.numpy()
+
             # mask invalid moves
-            self.Ps[s] = self.Ps[s] * valids
+            mask = self.boardEncoder.EncodeLegalMoves(board)
+            self.Ps[s] = self.Ps[s] * mask
+
             sum_Ps = np.sum(self.Ps[s])
             if sum_Ps > 0:
-                self.Ps[s] /= sum_Ps # renormalize
+                self.Ps[s] /= sum_Ps    # re-normalize
             else:
                 # if all moves were masked, make all valid moves equally probable
-                # NB: all valid moves may be masked if NNET architecture is insufficient or if overfitting
+                # NB: all valid moves may be masked if nnet architecture is insufficient or if overfitting
                 print("All valid moves were masked")
-                self.Ps[s] = self.Ps[s] + valids
+                self.Ps[s] = self.Ps[s] + mask
                 self.Ps[s] /= np.sum(self.Ps[s])
-            self.Vs[s] = valids
+            self.Vs[s] = self.boardEncoder.DecodeMoves(mask)
             self.Ns[s] = 0
             return -v
 
-        valids = self.Vs[s]
+        valid_moves = self.Vs[s]
         cur_best = -float('inf')
         best_act = -1
 
         # pick the action with the highest upper confidence bound
         cpuct = 1.0
-        for a in range(board.legal_moves):
-            if valids[a]:
-                if (s, a) in self.Qsa:
-                    u = self.Qsa[(s, a)] + cpuct * self.Ps[a] * math.sqrt(self.Ns[s]) / (1 + self.Nsa[(s, a)])
-                else:
-                    u = cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + 1e-8)
+        for a in valid_moves:
+            if (s, a) in self.Qsa:
+                u = self.Qsa[(s, a)] + cpuct * self.Ps[a] * math.sqrt(self.Ns[s]) / (1 + self.Nsa[(s, a)])
+            else:
+                u = cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + 1e-8)
 
-                if u > best_act:
-                    cur_best = u
-                    best_act = a
+            if u > best_act:
+                cur_best = u
+                best_act = a
 
         a = best_act
         board.push(a)

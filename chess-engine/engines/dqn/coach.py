@@ -46,7 +46,7 @@ class Coach:
         while True:
             episodeStep += 1
             # get action probabilities
-            encodedBoard = self.boardEncoder.Encode(self.board)
+            encodedBoard = self.boardEncoder.EncodeBoard(self.board)
             pi = self.mcts.getActionProb()
             episodeSteps.append([encodedBoard.copy(), self.curPlayer, pi])
 

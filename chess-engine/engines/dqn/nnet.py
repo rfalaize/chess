@@ -13,13 +13,13 @@ import time
 
 # neural network guiding tree search
 # ************************************************************************
-class ChessNet():
+class ChessNet(nn.Module):
 
     def __init__(self):
         # inputs: 6 pieces * 2 colors * 8*8 binary feature maps + 1 (turn)
         self.input_size = 13 * 64
-        # outputs: 32 pieces, 64 possible squares
-        self.action_size = 32 * 64
+        # outputs: 64 'from' squares, 64 'to' squares
+        self.action_size = 64 * 64
 
         # model
         # *********************************************
@@ -170,13 +170,15 @@ class BoardEncoder:
         mask = mask.ravel()
         return mask
 
-    def DecodeMove(self, encoded_move):
+    def DecodeMoves(self, encoded_move):
         # input: encoded move as a (64*64=)4096*1 array of bits
         # decode and unpack from-to squares
-        argswhere = np.argwhere(encoded_move.reshape(64, 64) == 1)[0]
-        from_square = argswhere[0]
-        to_square = argswhere[1]
-        return from_square, to_square
+        moves = []
+        for argsw in np.argwhere(encoded_move.reshape(64, 64) == 1):
+            from_square = argsw[0]
+            to_square = argsw[1]
+            moves.append((from_square, to_square))
+        return moves
 
 
 if __name__ == '__main__':
@@ -189,9 +191,10 @@ if __name__ == '__main__':
     mask = encoder.EncodeLegalMoves(board)
     assert (4096,) == mask.shape
     assert 20 == np.sum(mask)
-    # decode move
+    # decode moves
     encodedMove = np.zeros([64, 64])
     encodedMove[12, 28] = 1     # e2e4
-    decodedMove = encoder.DecodeMove(encodedMove.ravel())
-    assert (12, 28) == decodedMove
+    encodedMove[6, 21] = 1      # g1f3
+    decodedMoves = encoder.DecodeMoves(encodedMove.ravel())
+    assert [(6, 21), (12, 28)] == decodedMoves
     exit(0)
