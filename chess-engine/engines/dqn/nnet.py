@@ -170,15 +170,37 @@ class BoardEncoder:
         mask = mask.ravel()
         return mask
 
-    def DecodeMoves(self, encoded_move):
-        # input: encoded move as a (64*64=)4096*1 array of bits
+    def DecodeLegalMovesProbas(self, board, probas):
+        # input:
+        #   board
+        #   probabilities as 4096*1 array
+
         # decode and unpack from-to squares
-        moves = []
-        for argsw in np.argwhere(encoded_move.reshape(64, 64) == 1):
-            from_square = argsw[0]
-            to_square = argsw[1]
-            moves.append((from_square, to_square))
-        return moves
+        legal_moves_probas = {}
+        probas = probas.reshape(64, 64)
+        sum_probas = 0
+        for move in board.legal_moves:
+            from_square = move.from_square
+            to_square = move.to_square
+            proba = probas[from_square, to_square]
+            if proba == 0:
+                # increase a bit exploration
+                proba = 0.001
+            legal_moves_probas[(from_square, to_square)] = proba
+            sum_probas += proba
+
+        # rescale probas to that they sum to 1
+        if sum_probas == 0:
+            # WARN: this can happen if network lacks predicting power, or overfits
+            print('All legal moves had 0 proba')
+            equi_proba = 1 / len(legal_moves_probas)
+            for key in legal_moves_probas:
+                legal_moves_probas[key] = equi_proba
+        else:
+            for key in legal_moves_probas:
+                legal_moves_probas[key] /= sum_probas
+
+        return legal_moves_probas
 
 
 if __name__ == '__main__':
@@ -192,9 +214,10 @@ if __name__ == '__main__':
     assert (4096,) == mask.shape
     assert 20 == np.sum(mask)
     # decode moves
-    encodedMove = np.zeros([64, 64])
-    encodedMove[12, 28] = 1     # e2e4
-    encodedMove[6, 21] = 1      # g1f3
-    decodedMoves = encoder.DecodeMoves(encodedMove.ravel())
-    assert [(6, 21), (12, 28)] == decodedMoves
+    probas = np.zeros([64, 64])
+    probas[12, 28] = 0.3    # e2e4
+    probas[6, 21] = 0.5     # g1f3
+    probas[10, 34] = 0.2    # c2c5 (illegal)
+    decodedMoves = encoder.DecodeLegalMovesProbas(board, probas.ravel())
+    assert decodedMoves[(6, 21)] >= 0.611 and decodedMoves[(6, 21)] <= 0.612
     exit(0)

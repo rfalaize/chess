@@ -8,13 +8,13 @@ class MCTS:
     def __init__(self, board, nnet):
         self.board = board
         self.nnet = nnet
-        self.Qsa = {}   # stores Q values for edges (s,a)
-        self.Nsa = {}   # stores #times edge (s,a) was visited
-        self.Ns = {}    # stores #times board s was visited
-        self.Ps = {}    # stores initial policy (returned by neural net)
 
-        self.Es = {}    # stores if game ended for state s
-        self.Vs = {}    # stores game.validmoves for state s
+        self.Ns = {}    # stores #times board s was visited
+        self.Nsa = {}   # stores #times edge (s,a) was visited
+        self.Wsa = {}   # stores total action value for edge (s,a)
+        self.Qsa = {}   # stores average action value for edge (s,a)
+        self.Psa = {}   # stores prior probability returned by neural net
+        self.Vs = {}    # stores valid moves for state s
 
         self.boardEncoder = BoardEncoder()
 
@@ -49,11 +49,13 @@ class MCTS:
         till a leaf node is found. The action chosen at each node is one that has
         the maximum upper confidence bound.
 
-        Once a leaf node is found, the neural network is called to return an
-        initial policy P and a value v for the state. This value is propagated
-        up the search path. In case the leaf node is a terminal state, the
-        outcome is propagated up the search path.
-        The values of Nsa, Ns, Qsa are then updated.
+        Once a leaf node is found, 2 options:
+        1) leaf node is a terminal node; in that case, calculate the score
+        2) leaf node is not terminal node; in that case the neural network is called
+            to return an initial policy P(s,a) and a value v for the state.
+
+        In both cases, value is propagated up the search path.
+        The values of Ns, Nsa, Wsa and Qsa are then updated.
 
         Note: the values are the negative of the values of the current state.
         This is done since v in [-1; 1], and if v is the value of a state for
@@ -65,30 +67,30 @@ class MCTS:
 
         s = board.fen()
 
-        if s not in self.Es:
-            if board.is_game_over() and board.is_check_mate():
+        # terminal node
+        # ******************************************************
+        if board.is_game_over():
+            if board.is_check_mate():
                 if board.turn == chess.WHITE:
                     r = -1
                 else:
                     r = 1
             else:
                 r = 0
-            self.Es[s] = r
+            return (-1) * r
 
-        if self.Es[s] != 0:
-            # terminal node
-            return (-1) * self.Es[s]
-
-        if s not in self.Ps:
+        # leaf node
+        # ******************************************************
+        if s not in self.Ns:
             # leaf node
             encodedBoard = self.boardEncoder.EncodeBoard(board)
-            self.Ps[s], v = self.nnet.forward(encodedBoard)
-            self.Ps[s] = self.Ps[s].data.numpy()
+            probas, v = self.nnet.forward(encodedBoard)
+            probas = probas.data.numpy()
             v = v.data.numpy()
 
-            # mask invalid moves
-            mask = self.boardEncoder.EncodeLegalMoves(board)
-            self.Ps[s] = self.Ps[s] * mask
+            # get legal moves with probabilities
+            move_probas = self.boardEncoder.DecodeLegalMovesProbas(board, probas)
+
 
             sum_Ps = np.sum(self.Ps[s])
             if sum_Ps > 0:
@@ -111,7 +113,7 @@ class MCTS:
         cpuct = 1.0
         for a in valid_moves:
             if (s, a) in self.Qsa:
-                u = self.Qsa[(s, a)] + cpuct * self.Ps[a] * math.sqrt(self.Ns[s]) / (1 + self.Nsa[(s, a)])
+                u = self.Qsa[(s, a)] + cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s]) / (1 + self.Nsa[(s, a)])
             else:
                 u = cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + 1e-8)
 
