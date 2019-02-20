@@ -68,7 +68,7 @@ class MCTS:
         s = board.fen()
 
         # terminal node
-        # ******************************************************
+        # **********************************************************************
         if board.is_game_over():
             if board.is_check_mate():
                 if board.turn == chess.WHITE:
@@ -80,7 +80,7 @@ class MCTS:
             return (-1) * r
 
         # leaf node
-        # ******************************************************
+        # **********************************************************************
         if s not in self.Ns:
             # leaf node
             encodedBoard = self.boardEncoder.EncodeBoard(board)
@@ -91,47 +91,60 @@ class MCTS:
             # get legal moves with probabilities
             move_probas = self.boardEncoder.DecodeLegalMovesProbas(board, probas)
 
+            for a in move_probas:
+                self.Nsa[(s, a)] = 0
+                self.Qsa[(s, a)] = 0
+                self.Wsa[(s, a)] = 0
+                self.Psa[(s, a)] = move_probas[a]
 
-            sum_Ps = np.sum(self.Ps[s])
-            if sum_Ps > 0:
-                self.Ps[s] /= sum_Ps    # re-normalize
-            else:
-                # if all moves were masked, make all valid moves equally probable
-                # NB: all valid moves may be masked if nnet architecture is insufficient or if overfitting
-                print("All valid moves were masked")
-                self.Ps[s] = self.Ps[s] + mask
-                self.Ps[s] /= np.sum(self.Ps[s])
-            self.Vs[s] = self.boardEncoder.DecodeMoves(mask)
             self.Ns[s] = 0
+            self.Vs[s] = list(move_probas.keys())   # cache valid moves to speed-up
             return -v
 
-        valid_moves = self.Vs[s]
-        cur_best = -float('inf')
-        best_act = -1
-
         # pick the action with the highest upper confidence bound
-        cpuct = 1.0
+        # **********************************************************************
+        valid_moves = self.Vs[s]
+        best_UCB = -float('inf')
+        best_act = -1
         for a in valid_moves:
-            if (s, a) in self.Qsa:
-                u = self.Qsa[(s, a)] + cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s]) / (1 + self.Nsa[(s, a)])
-            else:
-                u = cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + 1e-8)
+            # exploration factor
+            Usa = 1.0 * self.Psa[(s, a)] * math.sqrt(self.Ns[s]) / (1 + self.Nsa[(s, a)])
+            # upper confidence bound
+            UCB = self.Qsa[(s, a)] + Usa
 
-            if u > best_act:
-                cur_best = u
+            if UCB > best_UCB:
+                best_UCB = UCB
                 best_act = a
 
         a = best_act
+
+        # continue search down the tree until a leaf or terminal node is found
+        # **********************************************************************
+        a_from, a_to = a[0], a[1]
+        # TO DO: push move with chess format
+        # !!
         board.push(a)
 
         v = self.search(board)
 
-        if (s,a) in self.Qsa:
+        board.pop()
+
+        # propagate value up the tree
+        # **********************************************************************
+        self.Nsa[(s, a)] += 1
+        self.Wsa[(s, a)] += v
+        self.Qsa[(s, a)] += self.Wsa[(s, a)] / self.Nsa[(s, a)]
+        self.Ns[s] += 1
+
+        '''
+        if (s, a) in self.Qsa:
+            self.Nsa[(s, a)] += 1
             self.Qsa[(s, a)] = (self.Nsa[(s, a)]*self.Qsa[(s, a)] + v)/(self.Nsa[(s, a)] + 1)
             self.Nsa[(s, a)] += 1
         else:
-            self.Qsa[(s, a)] = v
             self.Nsa[(s, a)] = 1
+            self.Wsa[(s, a)] = v
+            self.Qsa[(s, a)] = v
+        '''
 
-        self.Ns[s] += 1
         return -v
