@@ -16,6 +16,8 @@ import time
 class ChessNet(nn.Module):
 
     def __init__(self):
+        super(ChessNet, self).__init__()
+
         # inputs: 6 pieces * 2 colors * 8*8 binary feature maps + 1 (turn)
         self.input_size = 13 * 64
         # outputs: 64 'from' squares, 64 'to' squares

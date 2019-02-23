@@ -31,17 +31,25 @@ class MCTS:
         for i in range(self.numMCTSsims):
             self.search(self.board.copy())
 
-        counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(self.board.legal_moves)]
+        counts = []
+        moves = []
+        for move in self.board.legal_moves:
+            a = (move.from_square, move.to_square)
+            if (s, a) in self.Nsa:
+                counts.append(self.Nsa[(s, a)])
+            else:
+                counts.append(0)
+            moves.append(move)
 
         if temp == 0:
             bestA = np.argmax(counts)
             probs = [0] * len(counts)
             probs[bestA] = 1
-            return probs
+            return probs, moves
 
-        counts = [x**(1./temp) for x in temp]
+        # counts = [x ** (1./temp) for x in temp]
         probs = [x / float(sum(counts)) for x in counts]
-        return probs
+        return probs, moves
 
     def search(self, board):
         '''
@@ -70,7 +78,7 @@ class MCTS:
         # terminal node
         # **********************************************************************
         if board.is_game_over():
-            if board.is_check_mate():
+            if board.is_checkmate():
                 if board.turn == chess.WHITE:
                     r = -1
                 else:
@@ -86,7 +94,7 @@ class MCTS:
             encodedBoard = self.boardEncoder.EncodeBoard(board)
             probas, v = self.nnet.forward(encodedBoard)
             probas = probas.data.numpy()
-            v = v.data.numpy()
+            v = v.data.numpy()[0]
 
             # get legal moves with probabilities
             move_probas = self.boardEncoder.DecodeLegalMovesProbas(board, probas)
@@ -120,10 +128,7 @@ class MCTS:
 
         # continue search down the tree until a leaf or terminal node is found
         # **********************************************************************
-        a_from, a_to = a[0], a[1]
-        # TO DO: push move with chess format
-        # !!
-        board.push(a)
+        board.push(chess.Move(a[0], a[1]))
 
         v = self.search(board)
 

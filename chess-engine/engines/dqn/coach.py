@@ -47,14 +47,15 @@ class Coach:
             episodeStep += 1
             # get action probabilities
             encodedBoard = self.boardEncoder.EncodeBoard(self.board)
-            pi = self.mcts.getActionProb()
+            pi, moves = self.mcts.getActionProb()
             episodeSteps.append([encodedBoard.copy(), self.curPlayer, pi])
 
-            action = np.random.choice(len(pi), p=pi)
-            self.board = self.board.push(action)
+            move_id = np.random.choice(len(pi), p=pi)
+            self.board.push(moves[move_id])
             self.curPlayer = not self.board.turn
 
-            if board.is_game_over():
+            chess.Board.move_stack
+            if board.is_game_over() or len(chess.Board.move_stack)>=150:
                 if board.is_checkmate():
                     if board.turn:
                         r = -1  # black won
@@ -65,7 +66,7 @@ class Coach:
                 result = []
                 for brd, player, probas in episodeSteps:
                     score = r * (-1) ** (player != self.curPlayer)
-                    result.append(brd, probas, score)
+                    result.append((brd, probas, score))
                 return result
 
     def learn(self):
