@@ -19,7 +19,7 @@ class MCTS:
         self.boardEncoder = BoardEncoder()
 
         # hyper parameters
-        self.numMCTSsims = 50
+        self.numMCTSsims = 2
 
     def getActionProb(self, temp=1):
         # this function performs numMctsSims simulations

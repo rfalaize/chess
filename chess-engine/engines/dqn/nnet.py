@@ -10,6 +10,7 @@ from torch.autograd import Variable
 from utils.meter import AverageMeter
 from utils.progress.bar import Bar
 import time
+import os
 
 # neural network guiding tree search
 # ************************************************************************
@@ -121,6 +122,23 @@ class ChessNet(nn.Module):
 
     def loss_v(self, targets, outputs):
         return -torch.sum((targets - outputs.view(-1))**2) / targets.size()[0]
+
+    def save_checkpoint(self, folder='~/temp/checkpoint', filename='checkpoint.pth.tar'):
+        file_path = os.path.join(folder, filename)
+        if not os.path.exists(folder):
+            print("Checkpoint Directory does not exist; making directory {}".format(folder))
+            os.mkdir(folder)
+        torch.save({
+            'state_dict' : self.state_dict(),
+        }, file_path)
+
+    def load_checkpoint(self, folder='~/temp/checkpoint', filename='checkpoint.pth.tar'):
+        file_path = os.path.join(folder, filename)
+        if not os.path.exists(file_path):
+            raise("No model in path {}".format(file_path))
+        map_location = None if self.cuda else 'cpu'
+        checkpoint = torch.load(file_path, map_location=map_location)
+        self.load_state_dict(checkpoint['state_dict'])
 
 
 # encoder to convert board into tensor
