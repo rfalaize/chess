@@ -54,8 +54,7 @@ class Coach:
             self.board.push(moves[move_id])
             self.curPlayer = not self.board.turn
 
-            chess.Board.move_stack
-            if board.is_game_over() or len(chess.Board.move_stack)>=150:
+            if board.is_game_over() or len(self.board.move_stack)>=150:
                 if board.is_checkmate():
                     if board.turn:
                         r = -1  # black won
