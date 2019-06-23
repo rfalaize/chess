@@ -1,3 +1,4 @@
+'''
 from engines.arena import PlayGame, PlayGames
 from engines.rnd.engine import Engine as EngineRandom
 from engines.minimax.v2.engine import Engine as EngineMinimaxV2
@@ -16,3 +17,4 @@ if __name__ == '__main__':
     print("********************* PIT *************************")
     test_PlayGames()
     print("********************* END *************************")
+'''
