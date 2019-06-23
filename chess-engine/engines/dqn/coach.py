@@ -26,13 +26,16 @@ class Coach:
         self.trainExamplesHistory = []
 
         # hyper parameters
-        self.numIters = 1000
-        self.numEpisodes = 100
+        self.numIters = 50
+        self.numEpisodes = 3
         self.maxLenHistory = 200000
-        self.numItersForTrainExamplesHistory = 20
+        self.numItersForTrainExamplesHistory = 2
 
         # checkpoint
-        self.path = 'D:/temp/snapshots/chess.dqn.v1/'
+        if os.name == 'posix':
+            self.path = '~/temp/deep-chess/checkpoints/'
+        else:
+            self.path = 'D:/temp/deep-chess/checkpoints/'
 
     def executeEpisode(self):
         # Execute one episode of self-play, starting with player 1 until end of game.
@@ -47,14 +50,14 @@ class Coach:
             episodeStep += 1
             # get action probabilities
             encodedBoard = self.boardEncoder.EncodeBoard(self.board)
-            pi = self.mcts.getActionProb()
+            pi, moves = self.mcts.getActionProb()
             episodeSteps.append([encodedBoard.copy(), self.curPlayer, pi])
 
-            action = np.random.choice(len(pi), p=pi)
-            self.board = self.board.push(action)
+            move_id = np.random.choice(len(pi), p=pi)
+            self.board.push(moves[move_id])
             self.curPlayer = not self.board.turn
 
-            if board.is_game_over():
+            if board.is_game_over() or len(self.board.move_stack)>=150:
                 if board.is_checkmate():
                     if board.turn:
                         r = -1  # black won
@@ -65,7 +68,7 @@ class Coach:
                 result = []
                 for brd, player, probas in episodeSteps:
                     score = r * (-1) ** (player != self.curPlayer)
-                    result.append(brd, probas, score)
+                    result.append((brd, probas, score))
                 return result
 
     def learn(self):
@@ -93,7 +96,7 @@ class Coach:
                     'Eps Time: {et:.3f}s ' \
                     '| Total: {total:} '.format(
                         eps=eps + 1,
-                        maxeps=self.args.numEps,
+                        maxeps=self.numEpisodes,
                         et=meter.avg,
                         total=bar.elapsed_td,
                         eta=bar.eta_td)
@@ -103,7 +106,7 @@ class Coach:
             # add iteration samples to history
             self.trainExamplesHistory.append(iterationTrainExamples)
 
-            if (len(self.trainExamplesHistory) > self.numItersForTrainExamplesHistory):
+            if len(self.trainExamplesHistory) > self.numItersForTrainExamplesHistory:
                 print("len(trainExamplesHistory) =", len(self.trainExamplesHistory),
                       " => remove the oldest trainExamples")
                 self.trainExamplesHistory.pop(0)
