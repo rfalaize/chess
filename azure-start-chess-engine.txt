@@ -1,1 +1,4 @@
-gunicorn --bind=0.0.0.0 --timeout 600 --chdir chess-engine main:app
+pip install -r requirements.txt
+cd ./chess-engine
+python main.py
+rem gunicorn --bind=0.0.0.0 --timeout 600 --chdir chess-engine main:app
