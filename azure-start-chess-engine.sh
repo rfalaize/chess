@@ -1,0 +1,1 @@
+./azure-start-chess-engine.sh
