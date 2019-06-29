@@ -1,1 +1,5 @@
-{}
+{
+  "projects": {
+    "default": "deep-chess-ui-2bb4c"
+  }
+}
