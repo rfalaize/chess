@@ -1,5 +1,5 @@
 ::rem Build app...
-npm run build
+::npm run build
 
 ::rem Deploying on gcloud storage...
 ::gsutil -m cp -r ./build/* gs://www.rhome.ai/
