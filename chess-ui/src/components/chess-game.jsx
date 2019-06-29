@@ -37,6 +37,14 @@ class ChessGameComponent extends Component {
     // stats history
     this.state.enginestats = { elapsed_time: [] };
 
+    if (process.env.NODE_ENV === "production") {
+      // engine_server = "https://deep-chess-229318.appspot.com/";
+      // migrate from gcp to azure
+      this.state.engine_server = "https://chess-engine.azurewebsites.net/";
+    } else {
+      this.state.engine_server = "http://localhost:5000/";
+    }
+
     // non-state
     this.historynextmoves = [];
   }
@@ -254,14 +262,7 @@ class ChessGameComponent extends Component {
 
     var game = this;
     var input = { fen: fen };
-    var engine_server = "";
-    if (process.env.NODE_ENV === "production") {
-      // engine_server = "https://deep-chess-229318.appspot.com/";
-      // migrate from gcp to azure
-      engine_server = "https://chess-engine.azurewebsites.net/";
-    } else {
-      engine_server = "http://localhost:5000/";
-    }
+    var engine_server = this.state.engine_server;
     var engine_url = engine_server + "api/chess/engines/" + this.state.algoname;
     console.log("Posting game to " + engine_url + "... input=", fen);
 
