@@ -256,7 +256,9 @@ class ChessGameComponent extends Component {
     var input = { fen: fen };
     var engine_server = "";
     if (process.env.NODE_ENV === "production") {
-      engine_server = "https://deep-chess-229318.appspot.com/";
+      // engine_server = "https://deep-chess-229318.appspot.com/";
+      // migrate from gcp to azure
+      engine_server = "https://chess-engine.azurewebsites.net/";
     } else {
       engine_server = "http://localhost:5000/";
     }
