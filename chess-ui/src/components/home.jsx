@@ -148,7 +148,7 @@ class HomeComponent extends Component {
                   />
                   <h3 className="mb-3">Programming</h3>
                   <p className="text-muted mb-0">
-                    Mostly q, python, C#, javascript.
+                    Mostly python, C#, javascript, q.
                   </p>
                 </div>
               </div>
@@ -198,7 +198,7 @@ class HomeComponent extends Component {
                 </a>
               </div>
               <div className="col-lg-6 col-sm-6">
-                <a className="portfolio-box" href="/">
+                <a className="portfolio-box" href="/particles">
                   <img
                     className="img-fluid"
                     src={require("./../assets/img/portfolio/planets.jpg")}
@@ -207,9 +207,26 @@ class HomeComponent extends Component {
                   <div className="portfolio-box-caption">
                     <div className="portfolio-box-caption-content">
                       <div className="project-category text-faded">
-                        Supervised Learning
+                        Animations
                       </div>
-                      <div className="project-name">Time series</div>
+                      <div className="project-name">Moving particles</div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+              <div className="col-lg-6 col-sm-6">
+                <a className="portfolio-box" href="/cube">
+                  <img
+                    className="img-fluid"
+                    src={require("./../assets/img/portfolio/dice.jpg")}
+                    alt=""
+                  />
+                  <div className="portfolio-box-caption">
+                    <div className="portfolio-box-caption-content">
+                      <div className="project-category text-faded">
+                        3D modelling
+                      </div>
+                      <div className="project-name">Moving Cube</div>
                     </div>
                   </div>
                 </a>
