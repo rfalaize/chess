@@ -18,7 +18,6 @@ class ChessHomeComponent extends Component {
     };
 
     validateForm() {
-        //return this.state.name.length > 0 && this.state.pwd === "nocoaching";
         return this.state.name.length > 0;
     }
 
