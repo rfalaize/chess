@@ -40,16 +40,20 @@ class ChessGameComponent extends Component {
         if (process.env.NODE_ENV === "production") {
             // GCP
             // this.state.engine_server = "https://deep-chess-229318.appspot.com/";
+
             // Azure
             // this.state.engine_server = "https://chess-engine.azurewebsites.net/";
+
             // Heroku
-            this.state.engine_server = "https://guarded-cove-12311.herokuapp.com/";
+            //this.state.engine_server = "https://guarded-cove-12311.herokuapp.com/";
+            this.state.engine_server = "https://deep-chess-engine.herokuapp.com/";
         } else {
-            this.state.engine_server = "http://localhost:5000/";
+            this.state.engine_server = "http://localhost:5800/";
         }
 
         // non-state
         this.historynextmoves = [];
+        this.polling = false;
     }
 
     render() {
@@ -150,18 +154,6 @@ class ChessGameComponent extends Component {
 
     componentDidMount() {
         this.initializeBoard(() => {
-            // get state from cache if available
-            /*var cachedKey = "deep-chess-state";
-      if (localStorage.hasOwnProperty(cachedKey)) {
-        // get state from localStorage
-        try {
-          var cachedState = localStorage.getItem("deep-chess-state");
-          this.setState(cachedState);
-          console.log("State restored successfully.");
-        } catch (e) {
-          console.log("Error while fetching cache:", e);
-        }
-      }*/
             if (this.state.playercolor === "white") return;
             // if player is black, start playing
             const fen = this.state.engine.fen();
@@ -221,63 +213,82 @@ class ChessGameComponent extends Component {
         const fen = this.state.engine.fen();
         var board = this.state.board;
         board.position(fen);
-        // cache
-        /*localStorage.setItem("deep-chess-state", this.state);
-    console.log("State cached");*/
-
         this.setState({ board: board }, callback);
     }
 
-    postGame(fen) {
+    postGame = fen => {
         // send post request to chess engine server
         this.setState({ loading: true });
 
-        var game = this;
-        var input = { fen: fen };
-        var engine_server = this.state.engine_server;
-        var engine_url = engine_server + "api/chess/engines/" + this.state.algoname;
+        let game = this;
+        let input = { engine: this.state.algoname, fen: fen };
+        let engine_server = this.state.engine_server;
+        let engine_url = engine_server + "api/v1/chess/engine/generate_move";
         console.log("Posting game to " + engine_url + "... input=", fen);
 
         axios
             .post(engine_url, input)
             .then(function(response) {
                 const data = response["data"];
-                const status = data["status"];
                 console.log("response=", data);
-
-                if (status !== "success") {
-                    alert("Engine error while calculating move:", data["message"]);
-                } else {
-                    const move = data["move"];
-                    const from = move.slice(0, 2);
-                    const target = move.slice(-2);
-                    game.state.engine.move({
-                        from: from,
-                        to: target,
-                        promotion: "q"
-                    });
-                    // update engine stats
-                    let statshistory = game.state.enginestats;
-                    let statsmove = data["stats"];
-                    for (let statname in statsmove) {
-                        if (!(statname in statshistory)) {
-                            statshistory[statname] = [];
-                        }
-                        statshistory[statname].push(statsmove[statname]);
-                    }
-                    game.setState({ enginestats: statshistory });
+                const status = data["status"];
+                if (status !== "WORKING") {
+                    throw new Error("Engine error while calculating move:" + data["error"]);
                 }
-                game.updateBoard();
-                game.setState({ loading: false });
-                // check if game ended
-                if (game.isGameEnded()) return;
+                return data["move_id"];
+            })
+            .then(function(move_id) {
+                setTimeout(function() {
+                    game.pollMoveStatus(move_id);
+                }, 5000); // wait before the first poll
             })
             .catch(function(error) {
                 console.log(error);
                 alert(error);
                 this.setState({ loading: false });
             });
-    }
+    };
+
+    pollMoveStatus = move_id => {
+        let game = this;
+        let polling_url = this.state.engine_server + "api/v1/chess/engine/poll_move/" + move_id;
+        console.log("start polling result... url=" + polling_url);
+        axios.get(polling_url).then(function(response) {
+            console.log("POLL RESPONSE", response);
+            const data = response["data"];
+            if (data["status"] === "WORKING") {
+                // result is not available yet
+                // wait 10 seconds and poll again
+                setTimeout(function() {
+                    game.pollMoveStatus(move_id);
+                }, 10000);
+            } else {
+                const result = data["result"];
+                const move = result["move"];
+                const from = move.slice(0, 2);
+                const target = move.slice(-2);
+                game.state.engine.move({
+                    from: from,
+                    to: target,
+                    promotion: "q"
+                });
+                // update engine stats
+                let statshistory = game.state.enginestats;
+                let statsmove = result["stats"];
+                for (let statname in statsmove) {
+                    if (!(statname in statshistory)) {
+                        statshistory[statname] = [];
+                    }
+                    statshistory[statname].push(statsmove[statname]);
+                }
+                game.setState({ enginestats: statshistory });
+                game.updateBoard();
+                game.setState({ loading: false });
+                // check if game ended
+                if (game.isGameEnded()) return;
+            }
+        });
+    };
 
     isGameEnded() {
         const engine = this.state.engine;
