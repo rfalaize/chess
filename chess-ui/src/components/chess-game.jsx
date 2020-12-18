@@ -166,7 +166,7 @@ class ChessGameComponent extends Component {
         var engine = new Chess();
         const config = {
             draggable: true,
-            pieceTheme: "https://s3-us-west-2.amazonaws.com/chessimg/{piece}.png",
+            pieceTheme: '/{piece}.png',
             // hook events
             onDragStart: onDragStart,
             onDrop: onDrop,
